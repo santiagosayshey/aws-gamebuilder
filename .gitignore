@@ -1,0 +1,13 @@
+# Executables
+game
+
+# Build files
+*.o
+
+# IDE specific
+.vscode/
+.vs/
+
+# OS specific
+.DS_Store
+Thumbs.db
