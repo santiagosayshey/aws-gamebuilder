@@ -17,9 +17,6 @@ private:
 
 public:
     Game();
-    void processEvents();
-    void update();
-    void render();
     void run();
     
     // State management
