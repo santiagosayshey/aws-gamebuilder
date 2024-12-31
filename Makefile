@@ -24,6 +24,8 @@ all: directories $(TARGET)
 directories:
 	@mkdir -p $(BIN_DIR)
 	@mkdir -p $(OBJ_DIRS)
+	@mkdir -p $(BUILD_DIR)/ui
+	@mkdir -p $(BUILD_DIR)/states
 
 # Link the executable
 $(TARGET): $(OBJS)

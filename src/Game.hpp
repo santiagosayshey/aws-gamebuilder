@@ -9,6 +9,7 @@ public:
     ~Game() = default;
     
     void run();
+    void changeState(std::unique_ptr<State> newState);
 
 private:
     sf::RenderWindow window;

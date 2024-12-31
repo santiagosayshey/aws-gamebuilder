@@ -1,6 +1,13 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 
+enum class StateChange {
+    None,
+    Menu,
+    Game,
+    Pause
+};
+
 class State {
 public:
     State(sf::RenderWindow& window) : window(window) {}
@@ -10,6 +17,10 @@ public:
     virtual void update() = 0;
     virtual void render() = 0;
 
+    StateChange getStateChange() const { return requestedState; }
+
 protected:
+    void requestStateChange(StateChange state) { requestedState = state; }
     sf::RenderWindow& window;
+    StateChange requestedState = StateChange::None;
 };
