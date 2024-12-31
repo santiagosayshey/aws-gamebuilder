@@ -1,5 +1,6 @@
 #include "MenuState.hpp"
 #include <iostream>
+#include <cmath>
 
 MenuState::MenuState(sf::RenderWindow& window) 
     : State(window), selectedButton(-1) {
@@ -8,7 +9,6 @@ MenuState::MenuState(sf::RenderWindow& window)
 }
 
 void MenuState::loadResources() {
-    // Load font
     std::vector<std::string> fontPaths = {
         "arial.ttf",
         "C:/Windows/Fonts/arial.ttf",
@@ -31,33 +31,44 @@ void MenuState::loadResources() {
 
     // Setup title text
     titleText.setFont(font);
-    titleText.setString("Blackjack");
-    titleText.setCharacterSize(72);
+    titleText.setString("BLACKJACK");
+    titleText.setCharacterSize(84);
+    titleText.setLetterSpacing(1.5);
     titleText.setFillColor(sf::Color::White);
+    titleText.setOutlineThickness(3);
+    titleText.setOutlineColor(sf::Color(0, 50, 0));
     
-    // Center the title
+    // Center the title with a slight vertical offset
     sf::FloatRect titleBounds = titleText.getLocalBounds();
     titleText.setOrigin(titleBounds.width / 2, titleBounds.height / 2);
     titleText.setPosition(
         window.getSize().x / 2.f,
-        window.getSize().y / 4.f
+        window.getSize().y / 3.f
     );
 }
 
 void MenuState::initializeButtons() {
-    const float buttonWidth = 200.f;
-    const float buttonHeight = 50.f;
-    const float buttonSpacing = 20.f;
-    const float startY = window.getSize().y / 2.f;
+    const float buttonWidth = 250.f;
+    const float buttonHeight = 60.f;
+    const float buttonSpacing = 30.f;
+    const float startY = window.getSize().y / 2.f + 50.f;
 
-    std::vector<std::string> buttonTexts = {"Play", "Options", "Quit"};
+    std::vector<std::pair<std::string, sf::Vector2f>> buttonConfigs = {
+        {"PLAY", {1.0f, 1.0f}},
+        {"HELP", {0.9f, 0.9f}},
+        {"EXIT", {0.9f, 0.9f}}
+    };
     
-    for (size_t i = 0; i < buttonTexts.size(); ++i) {
+    for (size_t i = 0; i < buttonConfigs.size(); ++i) {
         float yPos = startY + i * (buttonHeight + buttonSpacing);
+        float scaledWidth = buttonWidth * buttonConfigs[i].second.x;
+        float scaledHeight = buttonHeight * buttonConfigs[i].second.y;
+        float xPos = (window.getSize().x - scaledWidth) / 2.f;
+        
         buttons.emplace_back(
-            sf::Vector2f((window.getSize().x - buttonWidth) / 2.f, yPos),
-            sf::Vector2f(buttonWidth, buttonHeight),
-            buttonTexts[i],
+            sf::Vector2f(xPos, yPos),
+            sf::Vector2f(scaledWidth, scaledHeight),
+            buttonConfigs[i].first,
             font
         );
     }
@@ -72,7 +83,6 @@ void MenuState::handleInput() {
         
         if (event.type == sf::Event::MouseMoved) {
             sf::Vector2f mousePos = getMousePosition();
-            // Update button highlights
             for (size_t i = 0; i < buttons.size(); ++i) {
                 buttons[i].setHighlight(buttons[i].isMouseOver(mousePos));
             }
@@ -82,17 +92,16 @@ void MenuState::handleInput() {
             event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2f mousePos = getMousePosition();
             
-            // Check button clicks
             for (size_t i = 0; i < buttons.size(); ++i) {
                 if (buttons[i].isMouseOver(mousePos)) {
                     switch (i) {
                         case 0: // Play
                             requestStateChange(StateChange::Game);
                             break;
-                        case 1: // Options
-                            // Will implement later
+                        case 1: // Help
+                            // Will implement help state later
                             break;
-                        case 2: // Quit
+                        case 2: // Exit
                             window.close();
                             break;
                     }
@@ -103,13 +112,41 @@ void MenuState::handleInput() {
 }
 
 void MenuState::update() {
-    // Add any menu animations or updates here
+    static float time = 0.0f;
+    time += 0.016f;  // Approximately 60 FPS
+    
+    // Subtle floating animation for title
+    float offset = std::sin(time * 2.0f) * 5.0f;
+    titleText.setPosition(
+        window.getSize().x / 2.f,
+        (window.getSize().y / 3.f) + offset
+    );
 }
 
 void MenuState::render() {
-    window.clear(sf::Color(0, 100, 0)); // Dark green background
+    // Create gradient background
+    sf::RectangleShape background(sf::Vector2f(window.getSize().x, window.getSize().y));
+    sf::Color darkGreen(0, 60, 0);
+    sf::Color lightGreen(0, 100, 0);
+    
+    // Draw dark gradient corners
+    window.clear(darkGreen);
+    
+    // Draw decorative elements
+    sf::CircleShape decorCircle(200.f);
+    decorCircle.setFillColor(sf::Color(0, 70, 0));
+    decorCircle.setPosition(-100.f, -100.f);
+    window.draw(decorCircle);
+    
+    decorCircle.setRadius(150.f);
+    decorCircle.setPosition(window.getSize().x - 100.f, window.getSize().y - 100.f);
+    window.draw(decorCircle);
 
-    // Draw title
+    // Draw title with shadow effect
+    sf::Text shadowText = titleText;
+    shadowText.setFillColor(sf::Color(0, 40, 0));
+    shadowText.setPosition(titleText.getPosition() + sf::Vector2f(4, 4));
+    window.draw(shadowText);
     window.draw(titleText);
 
     // Draw buttons
