@@ -4,14 +4,15 @@
 
 class Button {
 public:
-    Button(const sf::Vector2f& position, const sf::Vector2f& size, const std::string& text, const sf::Font& font);
+    Button(const sf::Vector2f& position, const sf::Vector2f& size, const std::string& text, const sf::Font& font, const std::string& textureFile);
     void draw(sf::RenderWindow& window);
     bool isMouseOver(const sf::Vector2f& mousePos) const;
     void setHighlight(bool highlight);
 
 private:
-    sf::RectangleShape shape;
+    sf::Sprite sprite;
+    sf::Texture texture;
     sf::Text text;
-    sf::Color defaultColor;
-    sf::Color hoverColor;
+    sf::Color textDefaultColor;
+    sf::Color textHoverColor;
 };

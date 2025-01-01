@@ -52,6 +52,7 @@ void MenuState::initializeButtons() {
     const float buttonHeight = 60.f;
     const float buttonSpacing = 30.f;
     const float startY = window.getSize().y / 2.f + 50.f;
+    const std::string buttonTexture = "src/assets/ui/button.png"; // Path to the button texture
 
     std::vector<std::pair<std::string, sf::Vector2f>> buttonConfigs = {
         {"PLAY", {1.0f, 1.0f}},
@@ -66,13 +67,15 @@ void MenuState::initializeButtons() {
         float xPos = (window.getSize().x - scaledWidth) / 2.f;
         
         buttons.emplace_back(
-            sf::Vector2f(xPos, yPos),
-            sf::Vector2f(scaledWidth, scaledHeight),
-            buttonConfigs[i].first,
-            font
+            sf::Vector2f(xPos, yPos),            // Position
+            sf::Vector2f(scaledWidth, scaledHeight), // Size
+            buttonConfigs[i].first,             // Button text
+            font,                               // Font
+            buttonTexture                       // Texture file
         );
     }
 }
+
 
 void MenuState::handleInput() {
     sf::Event event;
