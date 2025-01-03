@@ -15,14 +15,6 @@ public:
     }
 };
 
-// Factory method 
-std::shared_ptr<Wildcard> Wildcard::createWildcard(WildcardType type) {
-    if (type == WildcardType::ExtraBet) {
-        return std::make_shared<ExtraBet>();
-    }
-    return nullptr;
-}
-
 // make sure Player class has 
 // the getCurrentMoney() and setCurrentMoney()
 
