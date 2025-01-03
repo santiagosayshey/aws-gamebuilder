@@ -1,7 +1,7 @@
 #include "Wildcards.hpp"
 #include "entity/Player.hpp"
 
-class Tycoon : public Wildcard {
+class ExtraBet : public Wildcard {
 public:
     virtual ~Tycoon() {}
 
