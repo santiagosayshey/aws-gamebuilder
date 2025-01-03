@@ -3,7 +3,7 @@
 
 class ExtraBet : public Wildcard {
 public:
-    virtual ~ExtraBet() {}
+    virtual ~Tycoon() {}
 
     void use(Player& owner, std::vector<Player>& players) override {
         // Get current money
