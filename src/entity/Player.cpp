@@ -51,6 +51,10 @@ bool Player::canBet(float amount) const {
     return amount <= money;
 }
 
+void Player:setCurrentBet(float newBet) {
+    currentBet = newBet;
+}
+
 const std::string& Player::getName() const {
     return name;
 }

@@ -6,11 +6,11 @@ public:
     virtual ~Tycoon() {}
 
     void use(Player& owner, std::vector<Player>& players) override {
-        // Get current money
-        float currentMoney = owner.getMoney();
+        // Get current bet
+        float currentBet = owner.getCurrentBet();
         
-        // Double the money by adding the current amount as winnings
-        owner.addWinnings(currentMoney);
+        // Double the player's bet
+        owner.setCurrentBet(currentBet * 2);
     }
 };
 

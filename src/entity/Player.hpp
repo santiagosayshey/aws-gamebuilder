@@ -23,6 +23,7 @@ public:
     float getMoney() const;
     float getCurrentBet() const;
     bool canBet(float amount) const;
+    void setCurrentBet(float newBet); // new function for the wildcard "ExtraBet"
     
     // Getters
     const std::string& getName() const;
