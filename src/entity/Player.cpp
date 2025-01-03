@@ -1,4 +1,5 @@
 #include "Player.hpp"
+#include <stdexcept>
 
 Player::Player(const std::string& name, float initialMoney)
     : name(name)
@@ -57,4 +58,32 @@ const std::string& Player::getName() const {
 
 bool Player::isBusted() const {
     return calculateHandTotal() > 21;
+}
+
+void Player::addWildcard(std::shared_ptr<Wildcard> card) {
+    if (card) {
+        wildcards.push_back(card);
+    }
+}
+
+bool Player::useWildcard(size_t index, std::vector<Player>& allPlayers) {
+    if (index >= wildcards.size()) {
+        return false;
+    }
+    
+    wildcards[index]->use(*this, allPlayers);
+    wildcards.erase(wildcards.begin() + index);
+    return true;
+}
+
+const std::vector<std::shared_ptr<Wildcard>>& Player::getWildcards() const {
+    return wildcards;
+}
+
+bool Player::hasWildcards() const {
+    return !wildcards.empty();
+}
+
+void Player::clearWildcards() {
+    wildcards.clear();
 }
