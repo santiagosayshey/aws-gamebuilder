@@ -1,26 +1,16 @@
 #pragma once
 #include "State.hpp"
 #include "../ui/Button.hpp"
+#include "../entity/Player.hpp"
+#include "../entity/Card.hpp"
+#include "GameSettingsState.hpp"
 #include <vector>
 #include <memory>
 #include <iostream>
 
-class Card {
-public:
-    Card(int value);
-    void setPosition(const sf::Vector2f& pos);
-    void draw(sf::RenderWindow& window, const sf::Font& font, bool faceUp = true);
-    int getValue() const { return value; }
-
-private:
-    sf::RectangleShape shape;
-    sf::Text text;
-    int value;
-};
-
 class GameState : public State {
 public:
-    GameState(sf::RenderWindow& window);
+    GameState(sf::RenderWindow& window, const GameSettings& settings = GameSettings());
     
     void handleInput() override;
     void update() override;
@@ -28,37 +18,39 @@ public:
 
 private:
     void initializeButtons();
-    void loadResources();
+    bool loadResources();
     void dealInitialCards();
     void dealerPlay();
     void checkGameOver();
-    int calculateHandTotal(const std::vector<std::shared_ptr<Card>>& hand);
     sf::Vector2f getMousePosition() const;
     void resetGame();
     void startNewBet();
-    void handleWin();
-    void handleLoss();
-    void handlePush();
+    void handleWin(Player& player);
+    void handleLoss(Player& player);
+    void handlePush(Player& player);
     void updateMoneyText();
+    void nextPlayer();  // Move to next player's turn
+    size_t getCurrentPlayerIndex() const { return currentPlayerIndex; }
 
     sf::Font font;
     std::vector<Button> buttons;
     
-    std::vector<std::shared_ptr<Card>> playerHand;
-    std::vector<std::shared_ptr<Card>> dealerHand;
+    std::vector<Player> players;  // Vector of all players
+    size_t currentPlayerIndex;    // Current player's turn
+    Player dealer;
     
-    bool playerTurn;
-    bool gameOver;
-    bool dealerRevealed;
-    bool bettingPhase;
+    bool playerTurn;      // True if it's players' turns, false if dealer's turn
+    bool gameOver;        // True if round is over
+    bool dealerRevealed;  // True if dealer's cards are revealed
+    bool bettingPhase;    // True if in betting phase
     
-    float playerMoney;
-    float currentBet;
     float minBet;
     
-    sf::Text playerScoreText;
+    // Text elements for each player
+    std::vector<sf::Text> playerScoreTexts;
+    std::vector<sf::Text> playerMoneyTexts;
+    std::vector<sf::Text> playerBetTexts;
     sf::Text dealerScoreText;
     sf::Text messageText;
-    sf::Text moneyText;
-    sf::Text betText;
+    sf::Text currentPlayerText;  // Shows which player's turn it is
 };

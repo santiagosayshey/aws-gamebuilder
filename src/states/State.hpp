@@ -4,6 +4,7 @@
 enum class StateChange {
     None,
     Menu,
+    Settings,
     Game,
     Pause
 };

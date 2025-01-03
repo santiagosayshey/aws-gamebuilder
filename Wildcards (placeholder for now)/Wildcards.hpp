@@ -1,18 +1,14 @@
 #pragma once
+#include <iostream>
 #include <string>
 #include <vector>
 #include <memory>
+#include "entity/Player.hpp"
+#include "entity/Card.hpp"
 
-using namespace std;
-
-class deck; // wildcard needs object "deck" interaction
-class player; // player class inherit wildcard object
-
-class Wildcard(){
+class Wildcard {
     public:
-    virtual ~Wildcard() = default;
-    // the wildcard logic
-    virtual void 
-    // description for the card
-    virtual string description() const = 0;
-}
+        virtual ~Wildcard() = default;
+        virtual void activate(Player& player, std::vector<std::shared_ptr<Player>>& players, Deck& deck) = 0;
+        virtual std::string description() const = 0;
+};
