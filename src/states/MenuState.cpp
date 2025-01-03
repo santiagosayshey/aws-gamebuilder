@@ -99,8 +99,9 @@ void MenuState::handleInput() {
                 if (buttons[i].isMouseOver(mousePos)) {
                     switch (i) {
                         case 0: // Play
-                            requestStateChange(StateChange::Game);
-                            break;
+                            std::cout << "Play button clicked" << std::endl;
+                            requestStateChange(StateChange::Settings);  // Changed from StateChange::Game
+                            return;
                         case 1: // Help
                             // Will implement help state later
                             break;
