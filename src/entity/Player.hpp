@@ -14,6 +14,7 @@ public:
     void addCard(std::shared_ptr<Card> card);
     void clearHand();
     int calculateHandTotal() const;
+    void setHandTotal(int total);
     const std::vector<std::shared_ptr<Card>> &getHand() const;
 
     // Money management
@@ -39,4 +40,6 @@ private:
     std::vector<std::shared_ptr<Wildcard>> wildcards;
     float money;
     float currentBet;
+    bool hasOveriddenHandTotal = false;
+    int overiddenHandTotal = 0;
 };

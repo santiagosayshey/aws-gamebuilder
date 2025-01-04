@@ -1,33 +1,32 @@
 #pragma once
 #include "Wildcards.hpp"
 #include "entity/Player.hpp"
-#include "entity/Card.hpp"
-#include <vector>
-#include <iostream>
 
-class Foresight : public Wildcard
+class Nudge : public Wildcard
 {
 public:
-    Foresight() = default;
-    ~Foresight() = default;
+    Nudge() = default;
+    ~Nudge() = default;
 
     void use(Player &owner, std::vector<Player> &allPlayers) override
     {
-        if
+        owner.activateNudge();
     }
 
     std::string getName() const override
     {
-        return "Foresight";
+        return "Nudge";
     }
 
     std::string getDescription() const override
     {
-        return "See the next card that will be drawn.";
+        return "Increment or decrement your next card by 1.";
     }
 
     Timing getUsageTiming() const override
     {
-        return Timing::BEFORE_DRAW;
+        return Timing::ANY_TIME;
     }
 };
+
+// Add player class logic for this

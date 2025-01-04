@@ -14,10 +14,16 @@ void Player::clearHand()
 {
     hand.clear();
     currentBet = 0.0f;
+    hasOveriddenHandTotal = false;
 }
 
 int Player::calculateHandTotal() const
 {
+    if (hasOveriddenHandTotal)
+    {
+        return overiddenHandTotal;
+    }
+
     int total = 0;
     for (const auto &card : hand)
     {
@@ -92,4 +98,10 @@ void Player::useWildcard(int index, std::vector<Player> &allPlayers)
         wildcards[index]->use(*this, allPlayers);
         wildcards.erase(wildcards.begin() + index);
     }
+}
+
+void Player::setHandTotal(int total)
+{
+    hasOveriddenHandTotal = true;
+    overiddenHandTotal = total;
 }

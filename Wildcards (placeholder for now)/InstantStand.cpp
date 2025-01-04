@@ -1,33 +1,30 @@
 #pragma once
 #include "Wildcards.hpp"
 #include "entity/Player.hpp"
-#include "entity/Card.hpp"
-#include <vector>
-#include <iostream>
 
-class Foresight : public Wildcard
+class InstantStand : public Wildcard
 {
 public:
-    Foresight() = default;
-    ~Foresight() = default;
+    InstantStand() = default;
+    ~InstantStand() = default;
 
     void use(Player &owner, std::vector<Player> &allPlayers) override
     {
-        if
+        owner.setHandTotal(20);
     }
 
     std::string getName() const override
     {
-        return "Foresight";
+        return "Instant Stand";
     }
 
     std::string getDescription() const override
     {
-        return "See the next card that will be drawn.";
+        return "Sets your hand total to 20.";
     }
 
     Timing getUsageTiming() const override
     {
-        return Timing::BEFORE_DRAW;
+        return Timing::ANY_TIME;
     }
 };
