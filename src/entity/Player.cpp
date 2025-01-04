@@ -62,3 +62,28 @@ const std::string& Player::getName() const {
 bool Player::isBusted() const {
     return calculateHandTotal() > 21;
 }
+
+// Functions below required to use the wildcards
+void Player::addWildcard(std::shared_ptr<Wildcard> wildcard)
+{
+    wildcards.push_back(wildcard);
+}
+
+void Player::clearWildcards()
+{
+    wildcards.clear();
+}
+
+const std::vector<std::shared_ptr<Wildcard>> &Player::getWildcards() const
+{
+    return wildcards;
+}
+
+void Player::useWildcard(int index, std::vector<Player> &allPlayers)
+{
+    if (index >= 0 && index < wildcards.size())
+    {
+        wildcards[index]->use(*this, allPlayers);
+        wildcards.erase(wildcards.begin() + index);
+    }
+}
