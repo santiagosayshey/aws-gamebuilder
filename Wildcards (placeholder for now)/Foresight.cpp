@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 
+// incomplete
 class Foresight : public Wildcard
 {
 public:
@@ -13,7 +14,7 @@ public:
 
     void use(Player &owner, std::vector<Player> &allPlayers) override
     {
-        if
+        // logic
     }
 
     std::string getName() const override

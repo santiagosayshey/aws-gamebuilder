@@ -2,6 +2,7 @@
 #include "Wildcards.hpp"
 #include "entity/Player.hpp"
 
+// incomplete
 class Nudge : public Wildcard
 {
 public:
@@ -10,7 +11,7 @@ public:
 
     void use(Player &owner, std::vector<Player> &allPlayers) override
     {
-        owner.activateNudge();
+        int adjustment = getPlayerNudgeChoice(1);
     }
 
     std::string getName() const override
@@ -27,6 +28,21 @@ public:
     {
         return Timing::ANY_TIME;
     }
-};
 
-// Add player class logic for this
+private:
+    int getCardValue() const
+    {
+        // Logic to get the card value
+        return 0;
+    }
+
+    int getPlayerNudgeChoice(int currentCardValue) const
+    {
+        // Get the player's choice
+        int choice;
+        // Logic to get the player's choice
+
+        // Return the new card value
+        return choice == 1 ? currentCardValue + 1 : currentCardValue - 1;
+    }
+};
