@@ -9,33 +9,25 @@ MenuState::MenuState(sf::RenderWindow& window)
 }
 
 void MenuState::loadResources() {
-    std::vector<std::string> fontPaths = {
-        "arial.ttf",
-        "C:/Windows/Fonts/arial.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/System/Library/Fonts/Helvetica.ttf"
-    };
-    
-    bool fontLoaded = false;
-    for (const auto& path : fontPaths) {
-        if (font.loadFromFile(path)) {
-            fontLoaded = true;
-            break;
-        }
-    }
-    
-    if (!fontLoaded) {
-        std::cerr << "Error: Could not load font file." << std::endl;
+    // Load title font
+    if (!titleFont.loadFromFile("src/assets/font/CoffeeTin.ttf")) {
+        std::cerr << "Error: Could not load title font file." << std::endl;
         return;
     }
 
-    // Setup title text
-    titleText.setFont(font);
-    titleText.setString("BLACKJACK");
-    titleText.setCharacterSize(84);
-    titleText.setLetterSpacing(1.5);
-    titleText.setFillColor(sf::Color::White);
-    titleText.setOutlineThickness(3);
+    // Load button font
+    if (!buttonFont.loadFromFile("src/assets/font/Troska.ttf")) {
+        std::cerr << "Error: Could not load button font file." << std::endl;
+        return;
+    }
+
+    // Setup title text with casino styling
+    titleText.setFont(titleFont);
+    titleText.setString("JACK OF FORTUNE");
+    titleText.setCharacterSize(120);  // Larger size for casino font
+    titleText.setLetterSpacing(2.0);  // More spacing for that Vegas feel
+    titleText.setFillColor(sf::Color(0, 0, 0));  // Gold color
+    titleText.setOutlineThickness(4);  // Thicker outline
     titleText.setOutlineColor(sf::Color(0, 50, 0));
     
     // Center the title with a slight vertical offset
@@ -69,11 +61,10 @@ void MenuState::initializeButtons() {
             sf::Vector2f(xPos, yPos),             // Position
             sf::Vector2f(scaledWidth, scaledHeight), // Size
             buttonConfigs[i].first,               // Button text
-            font                                  // Font
+            buttonFont                            // Using buttonFont for buttons
         );
     }
 }
-
 
 void MenuState::handleInput() {
     sf::Event event;

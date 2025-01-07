@@ -17,7 +17,8 @@ private:
     void loadResources();
     sf::Vector2f getMousePosition() const;
 
-    sf::Font font;
+    sf::Font titleFont;
+    sf::Font buttonFont;
     sf::Text titleText;
     std::vector<Button> buttons;
     int selectedButton;
