@@ -2,6 +2,7 @@
 #include "states/MenuState.hpp"
 #include "states/GameState.hpp"
 #include "states/GameSettingsState.hpp"
+#include "states/HelpState.hpp"
 #include <iostream>
 
 Game::Game() 
@@ -42,10 +43,17 @@ void Game::run() {
                         changeState(std::make_unique<GameState>(window, settings));
                         break;
                     }
+                    case StateChange::Help:
+                        std::cout << "Changing to Help state" << std::endl;
+                        changeState(std::make_unique<HelpState>(window));
+                        break;
                     case StateChange::Pause:
                         std::cout << "Changing to Pause state" << std::endl;
                         // Will add PauseState later
                         break;
+                    case StateChange::None:
+                    default:
+                        break;  // No state change needed
                 }
             } catch (const std::exception& e) {
                 std::cerr << "Error during state change: " << e.what() << std::endl;

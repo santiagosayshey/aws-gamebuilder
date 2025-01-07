@@ -139,8 +139,10 @@ void MenuState::handleInput() {
                             std::cout << "Play button clicked" << std::endl;
                             requestStateChange(StateChange::Settings);
                             return;
-                        case 1:
-                            break;
+                        case 1: // Help button
+                            std::cout << "Help button clicked" << std::endl;
+                            requestStateChange(StateChange::Help);
+                            return;
                         case 2:
                             window.close();
                             break;
