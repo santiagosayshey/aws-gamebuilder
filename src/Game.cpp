@@ -5,7 +5,7 @@
 #include <iostream>
 
 Game::Game() 
-    : window(sf::VideoMode(1920, 1080), "Blackjack") {
+    : window(sf::VideoMode(1920, 1080), "Jack of Fortune") {
     window.setFramerateLimit(60);
     currentState = std::make_unique<MenuState>(window);
 }

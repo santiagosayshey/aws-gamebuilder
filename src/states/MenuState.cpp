@@ -37,11 +37,57 @@ void MenuState::loadResources() {
         window.getSize().x / 2.f,
         window.getSize().y / 3.f
     );
+
+    // Create circles with different properties
+    CircleData circle1;
+    circle1.shape.setRadius(200.f);
+    circle1.basePos = sf::Vector2f(-100.f, -100.f);
+    circle1.xFreq = 0.8f;
+    circle1.yFreq = 1.5f;
+    circle1.xAmp = 15.0f;
+    circle1.yAmp = 20.0f;
+    circle1.phase = 0.0f;
+    circle1.shape.setFillColor(sf::Color(0, 70, 0));
+
+    CircleData circle2;
+    circle2.shape.setRadius(150.f);
+    circle2.basePos = sf::Vector2f(window.getSize().x - 100.f, window.getSize().y - 100.f);
+    circle2.xFreq = 0.9f;
+    circle2.yFreq = 1.2f;
+    circle2.xAmp = 20.0f;
+    circle2.yAmp = 25.0f;
+    circle2.phase = 0.5f;
+    circle2.shape.setFillColor(sf::Color(0, 70, 0));
+
+    CircleData circle3;
+    circle3.shape.setRadius(100.f);
+    circle3.basePos = sf::Vector2f(-50.f, window.getSize().y - 150.f);
+    circle3.xFreq = 1.2f;
+    circle3.yFreq = 0.7f;
+    circle3.xAmp = 25.0f;
+    circle3.yAmp = 15.0f;
+    circle3.phase = 1.0f;
+    circle3.shape.setFillColor(sf::Color(0, 70, 0));
+
+    CircleData circle4;
+    circle4.shape.setRadius(120.f);
+    circle4.basePos = sf::Vector2f(window.getSize().x - 50.f, -50.f);
+    circle4.xFreq = 0.6f;
+    circle4.yFreq = 1.1f;
+    circle4.xAmp = 30.0f;
+    circle4.yAmp = 20.0f;
+    circle4.phase = 1.5f;
+    circle4.shape.setFillColor(sf::Color(0, 70, 0));
+
+    decorativeCircles.push_back(circle1);
+    decorativeCircles.push_back(circle2);
+    decorativeCircles.push_back(circle3);
+    decorativeCircles.push_back(circle4);
 }
 
 void MenuState::initializeButtons() {
-    const float buttonWidth = 280.f;  // Slightly wider for better appearance
-    const float buttonHeight = 70.f;  // Slightly taller for better appearance
+    const float buttonWidth = 280.f;
+    const float buttonHeight = 70.f;
     const float buttonSpacing = 40.f;
     const float startY = window.getSize().y / 2.f + 50.f;
 
@@ -58,12 +104,12 @@ void MenuState::initializeButtons() {
         float xPos = (window.getSize().x - scaledWidth) / 2.f;
         
         buttons.emplace_back(
-            sf::Vector2f(xPos, yPos),             // Position
-            sf::Vector2f(scaledWidth, scaledHeight), // Size
-            buttonConfigs[i].first,               // Button text
-            buttonFont,                           // Using buttonFont for buttons
-            sf::Color(220, 220, 220),          // Default: Light silver
-            sf::Color(255, 215, 0)             // Hover: Bright gold
+            sf::Vector2f(xPos, yPos),
+            sf::Vector2f(scaledWidth, scaledHeight),
+            buttonConfigs[i].first,
+            buttonFont,
+            sf::Color(220, 220, 220),
+            sf::Color(255, 215, 0)
         );
     }
 }
@@ -89,14 +135,13 @@ void MenuState::handleInput() {
             for (size_t i = 0; i < buttons.size(); ++i) {
                 if (buttons[i].isMouseOver(mousePos)) {
                     switch (i) {
-                        case 0: // Play
+                        case 0:
                             std::cout << "Play button clicked" << std::endl;
-                            requestStateChange(StateChange::Settings);  // Changed from StateChange::Game
+                            requestStateChange(StateChange::Settings);
                             return;
-                        case 1: // Help
-                            // Will implement help state later
+                        case 1:
                             break;
-                        case 2: // Exit
+                        case 2:
                             window.close();
                             break;
                     }
@@ -112,11 +157,26 @@ void MenuState::update() {
     time += deltaTime;
     
     // Update title animation
-    float offset = std::sin(time * 2.0f) * 5.0f;
+    float titleOffset = std::sin(time * 2.0f) * 5.0f;
     titleText.setPosition(
         window.getSize().x / 2.f,
-        (window.getSize().y / 3.f) + offset
+        (window.getSize().y / 3.f) + titleOffset
     );
+    
+    // Update circle animations
+    for (auto& circle : decorativeCircles) {
+        float xOffset = std::sin(time * circle.xFreq + circle.phase) * circle.xAmp;
+        float yOffset = std::cos(time * circle.yFreq + circle.phase) * circle.yAmp;
+        
+        // Add circular motion component
+        float circularX = std::cos(time * 0.5f + circle.phase) * (circle.xAmp * 0.5f);
+        float circularY = std::sin(time * 0.5f + circle.phase) * (circle.yAmp * 0.5f);
+        
+        circle.shape.setPosition(
+            circle.basePos.x + xOffset + circularX,
+            circle.basePos.y + yOffset + circularY
+        );
+    }
     
     // Update button animations
     for (auto& button : buttons) {
@@ -125,23 +185,13 @@ void MenuState::update() {
 }
 
 void MenuState::render() {
-    // Create gradient background
-    sf::RectangleShape background(sf::Vector2f(window.getSize().x, window.getSize().y));
-    sf::Color darkGreen(0, 60, 0);
-    sf::Color lightGreen(0, 100, 0);
-    
     // Draw dark gradient corners
-    window.clear(darkGreen);
+    window.clear(sf::Color(0, 60, 0));
     
     // Draw decorative elements
-    sf::CircleShape decorCircle(200.f);
-    decorCircle.setFillColor(sf::Color(0, 70, 0));
-    decorCircle.setPosition(-100.f, -100.f);
-    window.draw(decorCircle);
-    
-    decorCircle.setRadius(150.f);
-    decorCircle.setPosition(window.getSize().x - 100.f, window.getSize().y - 100.f);
-    window.draw(decorCircle);
+    for (const auto& circle : decorativeCircles) {
+        window.draw(circle.shape);
+    }
 
     // Draw title with shadow effect
     sf::Text shadowText = titleText;
