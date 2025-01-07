@@ -23,12 +23,12 @@ void MenuState::loadResources() {
 
     // Setup title text with casino styling
     titleText.setFont(titleFont);
-    titleText.setString("JACK OF FORTUNE");
-    titleText.setCharacterSize(120);  // Larger size for casino font
-    titleText.setLetterSpacing(2.0);  // More spacing for that Vegas feel
-    titleText.setFillColor(sf::Color(0, 0, 0));  // Rich gold color
-    titleText.setOutlineThickness(4);  // Thicker outline
-    titleText.setOutlineColor(sf::Color(0, 50, 0));
+    titleText.setString("Jack of Fortune");
+    titleText.setCharacterSize(80);
+    titleText.setLetterSpacing(2.0f);
+    titleText.setFillColor(sf::Color(255, 215, 0));  // Gold color
+    titleText.setOutlineThickness(3);
+    titleText.setOutlineColor(sf::Color(139, 69, 19));  // Dark brown outline for gold
     
     // Center the title with a slight vertical offset
     sf::FloatRect titleBounds = titleText.getLocalBounds();
