@@ -1,8 +1,12 @@
 // Button.cpp
 #include "Button.hpp"
 
-Button::Button(const sf::Vector2f& position, const sf::Vector2f& size, 
-               const std::string& buttonText, const sf::Font& font) 
+Button::Button(const sf::Vector2f& position, 
+              const sf::Vector2f& size, 
+              const std::string& buttonText, 
+              const sf::Font& font,
+              const sf::Color& defaultColor,
+              const sf::Color& hoverColor) 
     : hoverTransition(0.0f), isHovered(false) {
     
     // Setup main button shape
@@ -14,6 +18,8 @@ Button::Button(const sf::Vector2f& position, const sf::Vector2f& size,
     highlightColor = sf::Color(30, 120, 30);    // Lighter green
     currentColor = baseColor;
     shadowColor = sf::Color(0, 20, 0, 180);     // Very dark green with alpha
+    textDefaultColor = defaultColor;             // Use the passed in colors
+    textHoverColor = hoverColor;
     
     // Setup shadow
     shadowShape.setSize(size);
@@ -28,8 +34,6 @@ Button::Button(const sf::Vector2f& position, const sf::Vector2f& size,
     text.setFont(font);
     text.setString(buttonText);
     text.setCharacterSize(30);
-    textDefaultColor = sf::Color(200, 255, 200);  // Light green
-    textHoverColor = sf::Color::White;
     text.setFillColor(textDefaultColor);
     text.setStyle(sf::Text::Bold);
     

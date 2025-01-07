@@ -5,13 +5,17 @@
 
 class Button {
 public:
-    Button(const sf::Vector2f& position, const sf::Vector2f& size, 
-           const std::string& text, const sf::Font& font);
+    Button(const sf::Vector2f& position, 
+           const sf::Vector2f& size, 
+           const std::string& text, 
+           const sf::Font& font,
+           const sf::Color& defaultColor = sf::Color::White,    // Default text color
+           const sf::Color& hoverColor = sf::Color::Yellow);    // Default hover color
     
     void draw(sf::RenderWindow& window);
     bool isMouseOver(const sf::Vector2f& mousePos) const;
     void setHighlight(bool highlight);
-    void update(float deltaTime); // For animation updates
+    void update(float deltaTime);
 
 private:
     // Visual elements

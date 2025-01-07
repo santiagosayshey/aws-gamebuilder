@@ -10,7 +10,7 @@ MenuState::MenuState(sf::RenderWindow& window)
 
 void MenuState::loadResources() {
     // Load title font
-    if (!titleFont.loadFromFile("src/assets/font/CoffeeTin.ttf")) {
+    if (!titleFont.loadFromFile("src/assets/font/Casino.ttf")) {
         std::cerr << "Error: Could not load title font file." << std::endl;
         return;
     }
@@ -26,7 +26,7 @@ void MenuState::loadResources() {
     titleText.setString("JACK OF FORTUNE");
     titleText.setCharacterSize(120);  // Larger size for casino font
     titleText.setLetterSpacing(2.0);  // More spacing for that Vegas feel
-    titleText.setFillColor(sf::Color(0, 0, 0));  // Gold color
+    titleText.setFillColor(sf::Color(0, 0, 0));  // Rich gold color
     titleText.setOutlineThickness(4);  // Thicker outline
     titleText.setOutlineColor(sf::Color(0, 50, 0));
     
@@ -61,7 +61,9 @@ void MenuState::initializeButtons() {
             sf::Vector2f(xPos, yPos),             // Position
             sf::Vector2f(scaledWidth, scaledHeight), // Size
             buttonConfigs[i].first,               // Button text
-            buttonFont                            // Using buttonFont for buttons
+            buttonFont,                           // Using buttonFont for buttons
+            sf::Color(220, 220, 220),          // Default: Light silver
+            sf::Color(255, 215, 0)             // Hover: Bright gold
         );
     }
 }

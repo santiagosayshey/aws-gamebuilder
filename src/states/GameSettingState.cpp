@@ -100,7 +100,6 @@ void GameSettingsState::initializeButtons() {
         font
     );
 }
-
 void GameSettingsState::updateSettingsText() {
     settingTexts[0].setString("Number of Players: " + std::to_string(settings.numPlayers));
     settingTexts[1].setString("Starting Money: $" + std::to_string(int(settings.startingMoney)));
