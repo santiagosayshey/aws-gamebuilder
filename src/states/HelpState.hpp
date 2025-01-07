@@ -16,8 +16,8 @@ private:
     void initializeButtons();
     void initializeText();
     sf::Vector2f getMousePosition() const;
-
-    sf::Font font;
+    sf::Font contentFont;  // For help content
+    sf::Font buttonFont;   // For button
     sf::Text titleText;
     std::vector<sf::Text> helpTexts;
     std::vector<Button> buttons;  // Back button
