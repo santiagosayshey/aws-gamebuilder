@@ -48,11 +48,10 @@ void MenuState::loadResources() {
 }
 
 void MenuState::initializeButtons() {
-    const float buttonWidth = 250.f;
-    const float buttonHeight = 60.f;
-    const float buttonSpacing = 30.f;
+    const float buttonWidth = 280.f;  // Slightly wider for better appearance
+    const float buttonHeight = 70.f;  // Slightly taller for better appearance
+    const float buttonSpacing = 40.f;
     const float startY = window.getSize().y / 2.f + 50.f;
-    const std::string buttonTexture = "src/assets/ui/button.png"; // Path to the button texture
 
     std::vector<std::pair<std::string, sf::Vector2f>> buttonConfigs = {
         {"PLAY", {1.0f, 1.0f}},
@@ -67,11 +66,10 @@ void MenuState::initializeButtons() {
         float xPos = (window.getSize().x - scaledWidth) / 2.f;
         
         buttons.emplace_back(
-            sf::Vector2f(xPos, yPos),            // Position
+            sf::Vector2f(xPos, yPos),             // Position
             sf::Vector2f(scaledWidth, scaledHeight), // Size
-            buttonConfigs[i].first,             // Button text
-            font,                               // Font
-            buttonTexture                       // Texture file
+            buttonConfigs[i].first,               // Button text
+            font                                  // Font
         );
     }
 }
@@ -117,14 +115,20 @@ void MenuState::handleInput() {
 
 void MenuState::update() {
     static float time = 0.0f;
-    time += 0.016f;  // Approximately 60 FPS
+    const float deltaTime = 0.016f;  // Approximately 60 FPS
+    time += deltaTime;
     
-    // Subtle floating animation for title
+    // Update title animation
     float offset = std::sin(time * 2.0f) * 5.0f;
     titleText.setPosition(
         window.getSize().x / 2.f,
         (window.getSize().y / 3.f) + offset
     );
+    
+    // Update button animations
+    for (auto& button : buttons) {
+        button.update(deltaTime);
+    }
 }
 
 void MenuState::render() {

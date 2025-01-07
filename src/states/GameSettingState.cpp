@@ -68,7 +68,6 @@ bool GameSettingsState::loadResources() {
 }
 
 void GameSettingsState::initializeButtons() {
-    const std::string buttonTexture = "src/assets/ui/button.png";
     float startY = 150.f;
     float spacing = 80.f;
 
@@ -79,8 +78,7 @@ void GameSettingsState::initializeButtons() {
             sf::Vector2f(window.getSize().x / 2.f + 100.f, startY),
             sf::Vector2f(40.f, 40.f),
             "-",
-            font,
-            buttonTexture
+            font
         );
 
         // Increase button
@@ -88,8 +86,7 @@ void GameSettingsState::initializeButtons() {
             sf::Vector2f(window.getSize().x / 2.f + 150.f, startY),
             sf::Vector2f(40.f, 40.f),
             "+",
-            font,
-            buttonTexture
+            font
         );
 
         startY += spacing;
@@ -100,8 +97,7 @@ void GameSettingsState::initializeButtons() {
         sf::Vector2f((window.getSize().x - 200.f) / 2.f, window.getSize().y - 100.f),
         sf::Vector2f(200.f, 50.f),
         "Start Game",
-        font,
-        buttonTexture
+        font
     );
 }
 
