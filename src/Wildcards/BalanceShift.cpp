@@ -17,8 +17,9 @@ public:
 
                 auto& firstCard = hand[0];
                 auto& secondCard = hand[1];
-                int average = (firstCard -> getValue() + 
-                secondCard -> getValue()) / 2;
+                int total = firstCard -> getValue() + 
+                secondCard -> getValue();
+                int average = total / 2;
 
                 // set both card into average (make sure it's not a float value)
                 firstCard -> setValue(std::floor(average));
