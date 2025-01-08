@@ -12,6 +12,18 @@ public:
         // Double the player's bet
         owner.setCurrentBet(currentBet * 2);
     }
+
+    std::string getName() const override {
+        return "Extra Bet";
+    }
+
+    std::string getDescription() const override {
+        return "Doubles the player's current bet.";
+    }
+
+    Timing getUsageTiming() const override {
+        return Timing::AFTER_DRAW;
+    }
 };
 
 

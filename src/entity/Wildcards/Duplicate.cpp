@@ -33,4 +33,16 @@ public:
             owner.addWildcard(selectedWildcard);
         }
     }
+
+    std::string getName() const override {
+        return "Duplicate";
+    }
+
+    std::string getDescription() const override {
+        return "Allows you to duplicate a random wildcard from another player.";
+    }
+
+    Timing getTiming() const override {
+        return Timing:: ANY_TIME;
+    }
 };

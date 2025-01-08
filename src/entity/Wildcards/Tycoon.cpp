@@ -12,6 +12,18 @@ public:
         // Double the money by adding the current amount as winnings
         owner.addWinnings(currentMoney);
     }
+
+    std::string getName() const override {
+        return "Tycoon";
+    }
+
+    std::string getDescription() const override {
+        return "Doubles your winnings";
+    }
+
+    Timing getUsageTiming() const override {
+        return Timing::ANY_TIME;
+    }
 };
 
 

@@ -21,9 +21,21 @@ public:
                 secondCard -> getValue();
                 int average = total / 2;
 
-                // set both card into average (make sure it's not a float value)
+                // set both card into average (ensuring its not a float value)
                 firstCard -> setValue(std::floor(average));
                 secondCard -> setValue(std::ceil(average));
             }
+        }
+
+        std::string getName() const override {
+            return "Balance Shift";
+        }
+
+        std::string getDescription() const override {
+            return "Balance the value of the cards between 2 player";
+        }
+
+        Timing getUsageTiming() const override {
+            return Timing::ANY_TIME;
         }
 };
