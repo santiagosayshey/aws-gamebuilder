@@ -122,6 +122,12 @@ void GameState::initializeButtons()
         sf::Vector2f(150.f, 40.f),
         "Deal",
         font);
+
+    buttons.emplace_back(
+        sf::Vector2f(300.f, 400.f),
+        sf::Vector2f(150.f, 40.f),
+        "Double Down",
+        font);
 }
 
 sf::Vector2f GameState::getMousePosition() const
