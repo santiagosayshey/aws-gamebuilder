@@ -17,8 +17,19 @@ private:
     void loadResources();
     sf::Vector2f getMousePosition() const;
 
-    sf::Font font;
+    sf::Font titleFont;
+    sf::Font buttonFont;
     sf::Text titleText;
     std::vector<Button> buttons;
     int selectedButton;
+    struct CircleData {
+        sf::CircleShape shape;
+        sf::Vector2f basePos;
+        float xFreq;
+        float yFreq;
+        float xAmp;
+        float yAmp;
+        float phase;
+    };
+    std::vector<CircleData> decorativeCircles;
 };

@@ -1,4 +1,5 @@
 #include "Player.hpp"
+#include <stdexcept>
 
 Player::Player(const std::string &name, float initialMoney)
     : name(name), money(initialMoney), currentBet(0.0f)
@@ -76,14 +77,24 @@ bool Player::isBusted() const
     return calculateHandTotal() > 21;
 }
 
-void Player::addWildcard(std::shared_ptr<Wildcard> wildcard)
+void Player::addWildcard(std::shared_ptr<Wildcard> card)
 {
-    wildcards.push_back(wildcard);
+    if (card)
+    {
+        wildcards.push_back(card);
+    }
 }
 
-void Player::clearWildcards()
+bool Player::useWildcard(size_t index, std::vector<Player> &allPlayers)
 {
-    wildcards.clear();
+    if (index >= wildcards.size())
+    {
+        return false;
+    }
+
+    wildcards[index]->use(*this, allPlayers);
+    wildcards.erase(wildcards.begin() + index);
+    return true;
 }
 
 const std::vector<std::shared_ptr<Wildcard>> &Player::getWildcards() const
@@ -91,17 +102,12 @@ const std::vector<std::shared_ptr<Wildcard>> &Player::getWildcards() const
     return wildcards;
 }
 
-void Player::useWildcard(int index, std::vector<Player> &allPlayers)
+bool Player::hasWildcards() const
 {
-    if (index >= 0 && index < wildcards.size())
-    {
-        wildcards[index]->use(*this, allPlayers);
-        wildcards.erase(wildcards.begin() + index);
-    }
+    return !wildcards.empty();
 }
 
-void Player::setHandTotal(int total)
+void Player::clearWildcards()
 {
-    hasOveriddenHandTotal = true;
-    overiddenHandTotal = total;
+    wildcards.clear();
 }

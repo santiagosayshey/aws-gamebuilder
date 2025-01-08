@@ -1,9 +1,11 @@
 #include "GameSettingsState.hpp"
 #include <iostream>
+#include <cmath>
 
 GameSettingsState::GameSettingsState(sf::RenderWindow& window) 
     : State(window)
-    , ready(false) {
+    , ready(false)
+    , isDraggingSlider(false) {
     // Default settings
     settings.numPlayers = 1;
     settings.startingMoney = 500.0f;
@@ -15,101 +17,224 @@ GameSettingsState::GameSettingsState(sf::RenderWindow& window)
         return;
     }
     
+    initializeDecorations();
     initializeButtons();
     updateSettingsText();
 }
 
 bool GameSettingsState::loadResources() {
-    std::vector<std::string> fontPaths = {
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "arial.ttf",
-        "C:/Windows/Fonts/arial.ttf",
-        "/System/Library/Fonts/Helvetica.ttf"
-    };
-    
-    bool fontLoaded = false;
+    // Load title font (casino style)
+    if (!titleFont.loadFromFile("src/assets/font/Casino.ttf")) {
+        std::cerr << "Error: Could not load title font file." << std::endl;
+        return false;
+    }
+
+    // Load button font
+    if (!buttonFont.loadFromFile("src/assets/font/Troska.ttf")) {
+        std::cerr << "Error: Could not load button font file." << std::endl;
+        return false;
+    }
+
+    // Load standard font for settings text
+        std::vector<std::string> fontPaths = {
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", // Linux
+            "/Library/Fonts/Verdana.ttf",                                      // macOS
+            "C:/Windows/Fonts/verdana.ttf",                                    // s
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",                // Linux fallback
+            "arial.ttf",                                                       // General fallback
+            "C:/Windows/Fonts/arial.ttf",                                      // Windows fallback
+            "/System/Library/Fonts/Helvetica.ttf"                             // macOS fallback
+        };
+        
+    bool standardFontLoaded = false;
     for (const auto& path : fontPaths) {
-        if (font.loadFromFile(path)) {
-            fontLoaded = true;
+        if (standardFont.loadFromFile(path)) {
+            standardFontLoaded = true;
             break;
         }
     }
     
-    if (!fontLoaded) {
-        std::cerr << "Error: Could not load font file." << std::endl;
+    if (!standardFontLoaded) {
+        std::cerr << "Error: Could not load standard font file." << std::endl;
         return false;
     }
 
-    // Setup title
-    titleText.setFont(font);
-    titleText.setString("Game Settings");
-    titleText.setCharacterSize(48);
-    titleText.setFillColor(sf::Color::White);
+    // Setup title text with casino styling
+    titleText.setFont(titleFont);
+    titleText.setString("GAME SETTINGS");
+    titleText.setCharacterSize(80);
+    titleText.setLetterSpacing(2.0f);
+    titleText.setFillColor(sf::Color(255, 215, 0));  // Gold color
+    titleText.setOutlineThickness(3);
+    titleText.setOutlineColor(sf::Color(139, 69, 19));  // Dark brown outline for gold
+    
+    // Center the title
     sf::FloatRect titleBounds = titleText.getLocalBounds();
+    titleText.setOrigin(titleBounds.width / 2, titleBounds.height / 2);
     titleText.setPosition(
-        (window.getSize().x - titleBounds.width) / 2.f,
-        50.f
+        window.getSize().x / 2.f,
+        window.getSize().y / 4.f
     );
 
-    // Setup setting texts
+    // Setup setting texts with standard styling
     settingTexts.resize(4);
-    float startY = 150.f;
-    float spacing = 80.f;
+    float startY = window.getSize().y / 2.f - 100.f;
+    float spacing = 100.f;
     
     for (auto& text : settingTexts) {
-        text.setFont(font);
-        text.setCharacterSize(24);
-        text.setFillColor(sf::Color::White);
-        text.setPosition(window.getSize().x / 2.f - 200.f, startY);
+        text.setFont(standardFont);
+        text.setCharacterSize(32);
+        text.setFillColor(sf::Color(220, 220, 220));
+        text.setOutlineThickness(1);
+        text.setOutlineColor(sf::Color(0, 50, 0));
+        text.setPosition(window.getSize().x / 2.f - 350.f, startY);
         startY += spacing;
     }
 
     return true;
 }
 
+void GameSettingsState::initializeDecorations() {
+    // Create decorative circles similar to MenuState
+    // Top-left circle
+    CircleData circle1;
+    circle1.shape.setRadius(200.f);
+    circle1.basePos = sf::Vector2f(-100.f, -100.f);
+    circle1.xFreq = 0.8f;
+    circle1.yFreq = 1.5f;
+    circle1.xAmp = 15.0f;
+    circle1.yAmp = 20.0f;
+    circle1.phase = 0.0f;
+    circle1.shape.setFillColor(sf::Color(0, 70, 0));
+
+    // Bottom-right circle
+    CircleData circle2;
+    circle2.shape.setRadius(150.f);
+    circle2.basePos = sf::Vector2f(window.getSize().x - 100.f, window.getSize().y - 100.f);
+    circle2.xFreq = 0.9f;
+    circle2.yFreq = 1.2f;
+    circle2.xAmp = 20.0f;
+    circle2.yAmp = 25.0f;
+    circle2.phase = 0.5f;
+    circle2.shape.setFillColor(sf::Color(0, 70, 0));
+
+    decorativeCircles.push_back(circle1);
+    decorativeCircles.push_back(circle2);
+}
+
 void GameSettingsState::initializeButtons() {
-    const std::string buttonTexture = "src/assets/ui/button.png";
-    float startY = 150.f;
-    float spacing = 80.f;
+    float startY = window.getSize().y / 2.f - 100.f;
+    float spacing = 100.f;
+    const float adjustButtonWidth = 60.f;
+    const float adjustButtonHeight = 50.f;
 
-    // Add decrease/increase buttons for each setting
-    for (int i = 0; i < 4; ++i) {
-        // Decrease button
-        buttons.emplace_back(
-            sf::Vector2f(window.getSize().x / 2.f + 100.f, startY),
-            sf::Vector2f(40.f, 40.f),
-            "-",
-            font,
-            buttonTexture
+    // Add decrease/increase buttons for first 3 settings only
+    for (int i = 0; i < 3; ++i) {
+        // Create minus button with shape
+        auto minusButton = Button(
+            sf::Vector2f(window.getSize().x / 2.f + 100.f, startY - 10.f),
+            sf::Vector2f(adjustButtonWidth, adjustButtonHeight),
+            "",
+            buttonFont,
+            sf::Color(220, 220, 220),
+            sf::Color(255, 215, 0)
+        );
+        
+        // Position minus symbol exactly in center of button
+        sf::RectangleShape minusShape;
+        minusShape.setSize(sf::Vector2f(20.f, 4.f));
+        minusShape.setFillColor(sf::Color::White);
+        minusShape.setOrigin(minusShape.getSize().x / 2.f, minusShape.getSize().y / 2.f);
+        minusShape.setPosition(
+            window.getSize().x / 2.f + 100.f + (adjustButtonWidth / 2.f),
+            startY - 10.f + (adjustButtonHeight / 2.f)
+        );
+        minusSymbols.push_back(minusShape);
+        buttons.push_back(minusButton);
+
+        // Create plus button with shapes
+        auto plusButton = Button(
+            sf::Vector2f(window.getSize().x / 2.f + 180.f, startY - 10.f),
+            sf::Vector2f(adjustButtonWidth, adjustButtonHeight),
+            "",
+            buttonFont,
+            sf::Color(220, 220, 220),
+            sf::Color(255, 215, 0)
+        );
+        
+        sf::RectangleShape plusVertical;
+        plusVertical.setSize(sf::Vector2f(4.f, 20.f));
+        plusVertical.setFillColor(sf::Color::White);
+        plusVertical.setOrigin(plusVertical.getSize().x / 2.f, plusVertical.getSize().y / 2.f);
+        plusVertical.setPosition(
+            window.getSize().x / 2.f + 180.f + (adjustButtonWidth / 2.f),
+            startY - 10.f + (adjustButtonHeight / 2.f)
         );
 
-        // Increase button
-        buttons.emplace_back(
-            sf::Vector2f(window.getSize().x / 2.f + 150.f, startY),
-            sf::Vector2f(40.f, 40.f),
-            "+",
-            font,
-            buttonTexture
+        sf::RectangleShape plusHorizontal;
+        plusHorizontal.setSize(sf::Vector2f(20.f, 4.f));
+        plusHorizontal.setFillColor(sf::Color::White);
+        plusHorizontal.setOrigin(plusHorizontal.getSize().x / 2.f, plusHorizontal.getSize().y / 2.f);
+        plusHorizontal.setPosition(
+            window.getSize().x / 2.f + 180.f + (adjustButtonWidth / 2.f),
+            startY - 10.f + (adjustButtonHeight / 2.f)
         );
+
+        plusVerticalSymbols.push_back(plusVertical);
+        plusHorizontalSymbols.push_back(plusHorizontal);
+        buttons.push_back(plusButton);
 
         startY += spacing;
     }
 
-    // Start button at bottom
+    // Initialize slider for wildcards
+    const float sliderWidth = 120.f;
+    const float sliderHeight = 8.f;
+    const float handleSize = 24.f;
+    
+    sliderTrack.setSize(sf::Vector2f(sliderWidth, sliderHeight));
+    sliderTrack.setPosition(window.getSize().x / 2.f + 100.f, startY + 15.f);
+    sliderTrack.setFillColor(sf::Color(100, 100, 100));
+    
+    sliderHandle.setSize(sf::Vector2f(handleSize, handleSize));
+    sliderHandle.setOrigin(handleSize / 2.f, handleSize / 2.f);
+    sliderHandle.setPosition(
+        settings.wildcardEnabled ? sliderTrack.getPosition().x + sliderWidth : sliderTrack.getPosition().x,
+        sliderTrack.getPosition().y + sliderHeight / 2.f
+    );
+    sliderHandle.setFillColor(sf::Color::White);
+
+    // Start and back buttons
     buttons.emplace_back(
-        sf::Vector2f((window.getSize().x - 200.f) / 2.f, window.getSize().y - 100.f),
-        sf::Vector2f(200.f, 50.f),
-        "Start Game",
-        font,
-        buttonTexture
+        sf::Vector2f((window.getSize().x - 300.f) / 2.f, window.getSize().y - 150.f),
+        sf::Vector2f(300.f, 70.f),
+        "START GAME",
+        buttonFont,
+        sf::Color(220, 220, 220),
+        sf::Color(255, 215, 0)
+    );
+
+    buttons.emplace_back(
+        sf::Vector2f(50.f, window.getSize().y - 150.f),
+        sf::Vector2f(200.f, 70.f),
+        "BACK",
+        buttonFont,
+        sf::Color(220, 220, 220),
+        sf::Color(255, 215, 0)
     );
 }
 
 void GameSettingsState::updateSettingsText() {
-    settingTexts[0].setString("Number of Players: " + std::to_string(settings.numPlayers));
-    settingTexts[1].setString("Starting Money: $" + std::to_string(int(settings.startingMoney)));
+    settingTexts[0].setString("Players: " + std::to_string(settings.numPlayers));
+    settingTexts[1].setString("Starting Cash: $" + std::to_string(int(settings.startingMoney)));
     settingTexts[2].setString("Minimum Bet: $" + std::to_string(int(settings.minBet)));
-    settingTexts[3].setString("Wildcards: " + std::string(settings.wildcardEnabled ? "Enabled" : "Disabled"));
+    settingTexts[3].setString("Wildcards: " + std::string(settings.wildcardEnabled ? "On" : "Off"));
+
+    // Center each text
+    for (auto& text : settingTexts) {
+        sf::FloatRect bounds = text.getLocalBounds();
+        text.setOrigin(0, bounds.height / 2);
+    }
 }
 
 void GameSettingsState::adjustSetting(int settingIndex, bool increase) {
@@ -126,9 +251,6 @@ void GameSettingsState::adjustSetting(int settingIndex, bool increase) {
             if (increase && settings.minBet < settings.startingMoney / 10) settings.minBet += 5;
             else if (!increase && settings.minBet > 5) settings.minBet -= 5;
             break;
-        case 3: // Wildcards
-            settings.wildcardEnabled = !settings.wildcardEnabled;
-            break;
     }
     updateSettingsText();
 }
@@ -144,8 +266,8 @@ void GameSettingsState::handleInput() {
             event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2f mousePos = getMousePosition();
             
-            // Check setting adjustment buttons
-            for (size_t i = 0; i < 4; ++i) {
+            // Check setting adjustment buttons (only first 3 settings)
+            for (size_t i = 0; i < 3; ++i) {
                 if (buttons[i*2].isMouseOver(mousePos)) {
                     adjustSetting(i, false);  // decrease
                 }
@@ -154,45 +276,146 @@ void GameSettingsState::handleInput() {
                 }
             }
 
+            // Check slider handle
+            if (sliderHandle.getGlobalBounds().contains(mousePos)) {
+                isDraggingSlider = true;
+            }
+            // Check slider track click for instant movement
+            else if (sliderTrack.getGlobalBounds().contains(mousePos)) {
+                float clickPosition = (mousePos.x - sliderTrack.getPosition().x) / sliderTrack.getSize().x;
+                settings.wildcardEnabled = clickPosition >= 0.5f;
+                sliderHandle.setPosition(
+                    settings.wildcardEnabled ? sliderTrack.getPosition().x + sliderTrack.getSize().x 
+                                           : sliderTrack.getPosition().x,
+                    sliderHandle.getPosition().y
+                );
+                updateSettingsText();
+            }
+
             // Check start button
-            if (buttons.back().isMouseOver(mousePos)) {
+            if (buttons[buttons.size()-2].isMouseOver(mousePos)) {
                 requestStateChange(StateChange::Game);
+            }
+            // Check back button
+            else if (buttons.back().isMouseOver(mousePos)) {
+                requestStateChange(StateChange::Menu);
+            }
+        }
+        
+        if (event.type == sf::Event::MouseButtonReleased && 
+            event.mouseButton.button == sf::Mouse::Left) {
+            if (isDraggingSlider) {
+                isDraggingSlider = false;
+                
+                // Snap slider to nearest position
+                float sliderPos = (sliderHandle.getPosition().x - sliderTrack.getPosition().x) / 
+                                sliderTrack.getSize().x;
+                settings.wildcardEnabled = sliderPos >= 0.5f;
+                
+                // Update slider position based on setting
+                sliderHandle.setPosition(
+                    settings.wildcardEnabled ? sliderTrack.getPosition().x + sliderTrack.getSize().x 
+                                           : sliderTrack.getPosition().x,
+                    sliderHandle.getPosition().y
+                );
+                
+                updateSettingsText();
             }
         }
 
-        // Mouse move for button highlights
+        // Handle slider dragging and button highlights
         if (event.type == sf::Event::MouseMoved) {
             sf::Vector2f mousePos = getMousePosition();
+            
+            // Update button highlights
             for (auto& button : buttons) {
                 button.setHighlight(button.isMouseOver(mousePos));
             }
-        }
-    }
+            
+            // Update slider position if being dragged
+            if (isDraggingSlider) {
+                float newX = std::clamp(
+                    mousePos.x,
+                    sliderTrack.getPosition().x,
+                    sliderTrack.getPosition().x + sliderTrack.getSize().x
+                );
+                sliderHandle.setPosition(newX, sliderHandle.getPosition().y);
+           }
+       }
+   }
 }
 
 void GameSettingsState::update() {
-    // Nothing to update continuously
+   static float time = 0.0f;
+   const float deltaTime = 0.016f;  // Approximately 60 FPS
+   time += deltaTime;
+   
+   // Update title animation
+   float titleOffset = std::sin(time * 2.0f) * 5.0f;
+   titleText.setPosition(
+       window.getSize().x / 2.f,
+       window.getSize().y / 4.f + titleOffset
+   );
+   
+   // Update decorative circles
+   for (auto& circle : decorativeCircles) {
+       float xOffset = std::sin(time * circle.xFreq + circle.phase) * circle.xAmp;
+       float yOffset = std::cos(time * circle.yFreq + circle.phase) * circle.yAmp;
+       
+       float circularX = std::cos(time * 0.5f + circle.phase) * (circle.xAmp * 0.5f);
+       float circularY = std::sin(time * 0.5f + circle.phase) * (circle.yAmp * 0.5f);
+       
+       circle.shape.setPosition(
+           circle.basePos.x + xOffset + circularX,
+           circle.basePos.y + yOffset + circularY
+       );
+   }
+   
+   // Update button animations
+   for (auto& button : buttons) {
+       button.update(deltaTime);
+   }
 }
 
 void GameSettingsState::render() {
-    window.clear(sf::Color(0, 100, 0));  // Dark green background
+   window.clear(sf::Color(0, 60, 0));  // Matching MenuState's background
+   
+   // Draw decorative circles
+   for (const auto& circle : decorativeCircles) {
+       window.draw(circle.shape);
+   }
 
-    // Draw title
-    window.draw(titleText);
+   // Draw title with shadow effect
+   sf::Text shadowText = titleText;
+   shadowText.setFillColor(sf::Color(0, 40, 0));
+   shadowText.setPosition(titleText.getPosition() + sf::Vector2f(4, 4));
+   window.draw(shadowText);
+   window.draw(titleText);
 
-    // Draw setting texts
-    for (const auto& text : settingTexts) {
-        window.draw(text);
-    }
+   // Draw setting texts
+   for (const auto& text : settingTexts) {
+       window.draw(text);
+   }
 
-    // Draw buttons
-    for (auto& button : buttons) {
-        button.draw(window);
-    }
+   // Draw buttons
+   for (auto& button : buttons) {
+       button.draw(window);
+   }
 
-    window.display();
+   // Draw plus and minus symbols on top of buttons (only for first 3 settings)
+   for (size_t i = 0; i < 3; ++i) {
+       window.draw(minusSymbols[i]);
+       window.draw(plusVerticalSymbols[i]);
+       window.draw(plusHorizontalSymbols[i]);
+   }
+
+   // Draw slider for wildcards
+   window.draw(sliderTrack);
+   window.draw(sliderHandle);
+
+   window.display();
 }
 
 sf::Vector2f GameSettingsState::getMousePosition() const {
-    return window.mapPixelToCoords(sf::Mouse::getPosition(window));
+   return window.mapPixelToCoords(sf::Mouse::getPosition(window));
 }

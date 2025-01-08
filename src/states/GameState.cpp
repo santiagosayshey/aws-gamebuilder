@@ -97,44 +97,31 @@ bool GameState::loadResources()
 
 void GameState::initializeButtons()
 {
-    const std::string buttonTexture = "src/assets/ui/button.png";
-
     // Game buttons
     buttons.emplace_back(
         sf::Vector2f(600.f, 500.f),
         sf::Vector2f(100.f, 40.f),
         "Hit",
-        font,
-        buttonTexture);
+        font);
 
     buttons.emplace_back(
         sf::Vector2f(600.f, 550.f),
         sf::Vector2f(100.f, 40.f),
         "Stand",
-        font,
-        buttonTexture);
+        font);
 
     // Betting buttons
     buttons.emplace_back(
         sf::Vector2f(300.f, 300.f),
         sf::Vector2f(150.f, 40.f),
         "Bet $10",
-        font,
-        buttonTexture);
+        font);
 
     buttons.emplace_back(
         sf::Vector2f(300.f, 350.f),
         sf::Vector2f(150.f, 40.f),
         "Deal",
-        font,
-        buttonTexture);
-
-    buttons.emplace_back(
-        sf::Vector2f(600.f, 600.f),
-        sf::Vector2f(150.f, 40.f),
-        "Double Down",
-        font,
-        buttonTexture);
+        font);
 }
 
 sf::Vector2f GameState::getMousePosition() const

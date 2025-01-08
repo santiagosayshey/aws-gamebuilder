@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 #include "Card.hpp"
-#include "Wildcards.hpp"
+#include "./entity/wildcard/Wildcard.hpp"
 
 class Player
 {
@@ -33,6 +33,13 @@ public:
     // Getters
     const std::string &getName() const;
     bool isBusted() const;
+
+    // Wildcard management - structure only, no implementation yet
+    void addWildcard(std::shared_ptr<Wildcard> card);
+    bool useWildcard(size_t index, std::vector<Player> &allPlayers);
+    const std::vector<std::shared_ptr<Wildcard>> &getWildcards() const;
+    bool hasWildcards() const;
+    void clearWildcards();
 
 private:
     std::string name;
