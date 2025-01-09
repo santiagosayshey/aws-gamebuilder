@@ -1,8 +1,8 @@
-#pragma once
+/*
 #include "Wildcards.hpp"
 #include "entity/Player.hpp"
 
-class Peacemaker : public Wildcard
+    class Peacemaker : public Wildcard
 {
 public:
     Peacemaker() = default;
@@ -28,3 +28,4 @@ public:
         return Timing::ANY_TIME;
     }
 };
+*/

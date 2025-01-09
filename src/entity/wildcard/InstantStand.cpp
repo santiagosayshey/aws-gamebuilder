@@ -1,5 +1,5 @@
-#pragma once
-#include "Wildcards.hpp"
+/*
+#include "Wildcard.hpp"
 #include "entity/Player.hpp"
 
 class InstantStand : public Wildcard
@@ -10,7 +10,7 @@ public:
 
     void use(Player &owner, std::vector<Player> &allPlayers) override
     {
-        owner.setHandTotal(20);
+        player.setTotal(20)
     }
 
     std::string getName() const override
@@ -28,3 +28,4 @@ public:
         return Timing::ANY_TIME;
     }
 };
+*/

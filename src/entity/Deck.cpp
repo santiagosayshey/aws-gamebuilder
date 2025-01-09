@@ -50,3 +50,8 @@ size_t Deck::size() const
 {
     return cards.size();
 }
+
+const Card &Deck::peek() const
+{
+    return cards.back();
+}

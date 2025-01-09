@@ -3,6 +3,7 @@
 #include "../ui/Button.hpp"
 #include "../entity/Player.hpp"
 #include "../entity/Card.hpp"
+#include "../entity/Deck.hpp"
 #include "GameSettingsState.hpp"
 #include <vector>
 #include <memory>
@@ -39,6 +40,7 @@ private:
     std::vector<Player> players; // Vector of all players
     size_t currentPlayerIndex;   // Current player's turn
     Player dealer;
+    Deck deck;
 
     bool playerTurn;       // True if it's players' turns, false if dealer's turn
     bool gameOver;         // True if round is over

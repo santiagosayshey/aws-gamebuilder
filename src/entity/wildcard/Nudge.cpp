@@ -1,5 +1,5 @@
-#pragma once
-#include "Wildcards.hpp"
+/*
+#include "Wildcard.hpp"
 #include "entity/Player.hpp"
 
 // incomplete
@@ -46,3 +46,4 @@ private:
         return choice == 1 ? currentCardValue + 1 : currentCardValue - 1;
     }
 };
+*/

@@ -15,16 +15,10 @@ void Player::clearHand()
 {
     hand.clear();
     currentBet = 0.0f;
-    hasOveriddenHandTotal = false;
 }
 
 int Player::calculateHandTotal() const
 {
-    if (hasOveriddenHandTotal)
-    {
-        return overiddenHandTotal;
-    }
-
     int total = 0;
     for (const auto &card : hand)
     {

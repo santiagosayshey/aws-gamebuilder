@@ -1,6 +1,6 @@
 #include "Card.hpp"
 
-Card::Card(int value, Suit suit) : value(value, suit(suit))
+Card::Card(int value, Suit suit) : value(value), suit(suit)
 {
     shape.setSize(sf::Vector2f(75.f, 100.f));
     shape.setFillColor(sf::Color::White);

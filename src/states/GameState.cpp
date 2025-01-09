@@ -5,7 +5,7 @@
 #include <iomanip>
 
 GameState::GameState(sf::RenderWindow &window, const GameSettings &settings)
-    : State(window), currentPlayerIndex(0), dealer("Dealer", 0.0f), playerTurn(true), gameOver(false), dealerRevealed(false), bettingPhase(true), minBet(settings.minBet)
+    : State(window), currentPlayerIndex(0), dealer("Dealer", 0.0f), playerTurn(true), gameOver(false), dealerRevealed(false), bettingPhase(true), minBet(settings.minBet), deck()
 {
     // Initialize players
     for (int i = 0; i < settings.numPlayers; ++i)
@@ -19,6 +19,7 @@ GameState::GameState(sf::RenderWindow &window, const GameSettings &settings)
         return;
     }
 
+    deck.shuffle();
     initializeButtons();
     updateMoneyText();
 }
@@ -110,6 +111,12 @@ void GameState::initializeButtons()
         "Stand",
         font);
 
+    buttons.emplace_back(
+        sf::Vector2f(600.f, 500.f),
+        sf::Vector2f(100.f, 40.f),
+        "Double Down",
+        font);
+
     // Betting buttons
     buttons.emplace_back(
         sf::Vector2f(300.f, 300.f),
@@ -121,12 +128,6 @@ void GameState::initializeButtons()
         sf::Vector2f(300.f, 350.f),
         sf::Vector2f(150.f, 40.f),
         "Deal",
-        font);
-
-    buttons.emplace_back(
-        sf::Vector2f(300.f, 400.f),
-        sf::Vector2f(150.f, 40.f),
-        "Double Down",
         font);
 }
 
@@ -175,34 +176,6 @@ void GameState::handleInput()
                         dealInitialCards();
                     }
                 }
-
-                // Add condition for double down
-                else if (buttons[4].isMouseOver(mousePos) && players[currentPlayerIndex].getHand().size() == 2)
-                {
-                    Player &currentPlayer = players[currentPlayerIndex];
-                    currentPlayer.placeBet(currentPlayer.getCurrentBet());
-                    updateMoneyText();
-
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    std::uniform_int_distribution<> dis(1, 11);
-
-                    auto newCard = std::make_shared<Card>(dis(gen));
-                    float xOffset = 300.f + currentPlayer.getHand().size() * 85.f;
-                    float yOffset = 400.f + currentPlayerIndex * 50.f;
-                    newCard->setPosition(sf::Vector2f(xOffset, yOffset));
-                    currentPlayer.addCard(newCard);
-
-                    if (currentPlayer.isBusted())
-                    {
-                        handleLoss(currentPlayer);
-                        nextPlayer();
-                    }
-                    else
-                    {
-                        nextPlayer();
-                    }
-                }
             }
             else if (!gameOver && playerTurn)
             {
@@ -210,11 +183,7 @@ void GameState::handleInput()
                 // Hit button
                 if (buttons[0].isMouseOver(mousePos))
                 {
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    std::uniform_int_distribution<> dis(1, 11);
-
-                    auto newCard = std::make_shared<Card>(dis(gen));
+                    auto newCard = std::make_shared<Card>(deck.draw());
                     float xOffset = 300.f + currentPlayer.getHand().size() * 85.f;
                     float yOffset = 400.f + currentPlayerIndex * 50.f;
                     newCard->setPosition(sf::Vector2f(xOffset, yOffset));
@@ -230,6 +199,27 @@ void GameState::handleInput()
                 else if (buttons[1].isMouseOver(mousePos))
                 {
                     nextPlayer();
+                }
+                // Double down button
+                else if (buttons[2].isMouseOver(mousePos))
+                {
+                    players[currentPlayerIndex].placeBet(minBet);
+                    updateMoneyText();
+                    auto newCard = std::make_shared<Card>(deck.draw());
+                    float xOffset = 300.f + currentPlayer.getHand().size() * 85.f;
+                    float yOffset = 400.f + currentPlayerIndex * 50.f;
+                    newCard->setPosition(sf::Vector2f(xOffset, yOffset));
+                    currentPlayer.addCard(newCard);
+
+                    if (currentPlayer.isBusted())
+                    {
+                        handleLoss(currentPlayer);
+                        nextPlayer();
+                    }
+                    else
+                    {
+                        nextPlayer();
+                    }
                 }
             }
         }
@@ -293,27 +283,33 @@ void GameState::dealInitialCards()
     }
     dealer.clearHand();
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(1, 11);
+    deck.shuffle();
 
     // Deal two cards to each player
     for (size_t i = 0; i < players.size(); ++i)
     {
         for (int j = 0; j < 2; ++j)
         {
-            auto card = std::make_shared<Card>(dis(gen));
-            float xOffset = 300.f + j * 85.f;
-            float yOffset = 400.f + i * 50.f;
-            card->setPosition(sf::Vector2f(xOffset, yOffset));
-            players[i].addCard(card);
+            try
+            {
+                auto card = std::make_shared<Card>(deck.draw());
+                float xOffset = 300.f + j * 85.f;
+                float yOffset = 400.f + i * 50.f;
+                card->setPosition(sf::Vector2f(xOffset, yOffset));
+                players[i].addCard(card);
+            }
+            catch (const std::out_of_range &e)
+            {
+                std::cerr << "No more cards" << e.what() << std::endl;
+                return;
+            }
         }
     }
 
     // Deal to dealer
     for (int i = 0; i < 2; ++i)
     {
-        auto card = std::make_shared<Card>(dis(gen));
+        auto card = std::make_shared<Card>(deck.draw());
         card->setPosition(sf::Vector2f(300.f + i * 85.f, 100.f));
         dealer.addCard(card);
     }
@@ -328,11 +324,8 @@ void GameState::dealerPlay()
 {
     while (dealer.calculateHandTotal() < 17)
     {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(1, 11);
 
-        auto newCard = std::make_shared<Card>(dis(gen));
+        auto newCard = std::make_shared<Card>(deck.draw());
         newCard->setPosition(sf::Vector2f(300.f + dealer.getHand().size() * 85.f, 100.f));
         dealer.addCard(newCard);
     }
