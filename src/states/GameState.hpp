@@ -46,6 +46,7 @@ private:
     bool gameOver;         // True if round is over
     bool dealerRevealed;   // True if dealer's cards are revealed
     bool bettingPhase;     // True if in betting phase
+    bool canDoubleDown;    // True if player can double
     bool wildcardsEnabled; // True if wildcards are enabled
 
     float minBet;

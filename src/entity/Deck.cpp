@@ -12,7 +12,7 @@ void Deck::initialize()
     {
         for (int suit = 0; suit < 4; ++suit)
         {
-            for (int value = 1; value <= 13; ++value)
+            for (int value = 1; value <= 10; ++value)
             {
                 cards.emplace_back(value, static_cast<Suit>(suit));
             }

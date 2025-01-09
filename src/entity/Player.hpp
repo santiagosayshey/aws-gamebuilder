@@ -18,6 +18,7 @@ public:
 
     // Money management
     void placeBet(float amount);
+    void doubleBet();
     void addWinnings(float amount);
     float getMoney() const;
     float getCurrentBet() const;

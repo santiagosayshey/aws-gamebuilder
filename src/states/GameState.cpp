@@ -65,7 +65,7 @@ bool GameState::loadResources()
         moneyText.setFont(font);
         moneyText.setCharacterSize(24);
         moneyText.setFillColor(sf::Color::White);
-        moneyText.setPosition(200.f, yOffset + i * 50.f);
+        moneyText.setPosition(1200.f, yOffset + i * 50.f);
         playerMoneyTexts.push_back(moneyText);
 
         // Bet text
@@ -73,7 +73,7 @@ bool GameState::loadResources()
         betText.setFont(font);
         betText.setCharacterSize(24);
         betText.setFillColor(sf::Color::White);
-        betText.setPosition(400.f, yOffset + i * 50.f);
+        betText.setPosition(1400.f, yOffset + i * 50.f);
         playerBetTexts.push_back(betText);
     }
 
@@ -112,7 +112,7 @@ void GameState::initializeButtons()
         font);
 
     buttons.emplace_back(
-        sf::Vector2f(600.f, 500.f),
+        sf::Vector2f(600.f, 600.f),
         sf::Vector2f(100.f, 40.f),
         "Double Down",
         font);
@@ -154,13 +154,13 @@ void GameState::handleInput()
             if (bettingPhase)
             {
                 // Bet button
-                if (buttons[2].isMouseOver(mousePos) && players[currentPlayerIndex].canBet(minBet))
+                if (buttons[3].isMouseOver(mousePos) && players[currentPlayerIndex].canBet(minBet))
                 {
                     players[currentPlayerIndex].placeBet(minBet);
                     updateMoneyText();
                 }
                 // Deal button
-                else if (buttons[3].isMouseOver(mousePos) && players[currentPlayerIndex].getCurrentBet() > 0)
+                else if (buttons[4].isMouseOver(mousePos) && players[currentPlayerIndex].getCurrentBet() > 0)
                 {
                     if (currentPlayerIndex < players.size() - 1)
                     {
@@ -203,7 +203,7 @@ void GameState::handleInput()
                 // Double down button
                 else if (buttons[2].isMouseOver(mousePos))
                 {
-                    players[currentPlayerIndex].placeBet(minBet);
+                    players[currentPlayerIndex].doubleBet();
                     updateMoneyText();
                     auto newCard = std::make_shared<Card>(deck.draw());
                     float xOffset = 300.f + currentPlayer.getHand().size() * 85.f;
@@ -216,10 +216,7 @@ void GameState::handleInput()
                         handleLoss(currentPlayer);
                         nextPlayer();
                     }
-                    else
-                    {
-                        nextPlayer();
-                    }
+                    nextPlayer();
                 }
             }
         }
@@ -465,8 +462,8 @@ void GameState::render()
     if (bettingPhase)
     {
         // Draw betting buttons
-        buttons[2].draw(window); // Bet button
-        buttons[3].draw(window); // Deal button
+        buttons[3].draw(window); // Bet button
+        buttons[4].draw(window); // Deal button
     }
     else
     {
@@ -490,6 +487,7 @@ void GameState::render()
         // Draw game buttons
         buttons[0].draw(window); // Hit button
         buttons[1].draw(window); // Stand button
+        buttons[2].draw(window); // Double down button
 
         // Draw scores
         for (const auto &text : playerScoreTexts)
