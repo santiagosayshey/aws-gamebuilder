@@ -1,53 +1,63 @@
 #include "Player.hpp"
+#include <stdexcept>
 
-Player::Player(const std::string& name, float initialMoney)
-    : name(name)
-    , money(initialMoney)
-    , currentBet(0.0f)
+Player::Player(const std::string &name, float initialMoney)
+    : name(name), money(initialMoney), currentBet(0.0f)
 {
 }
 
-void Player::addCard(std::shared_ptr<Card> card) {
+void Player::addCard(std::shared_ptr<Card> card)
+{
     hand.push_back(card);
 }
 
-void Player::clearHand() {
+void Player::clearHand()
+{
     hand.clear();
     currentBet = 0.0f;
 }
 
-int Player::calculateHandTotal() const {
+int Player::calculateHandTotal() const
+{
     int total = 0;
-    for (const auto& card : hand) {
+    for (const auto &card : hand)
+    {
         total += card->getValue();
     }
     return total;
 }
 
-const std::vector<std::shared_ptr<Card>>& Player::getHand() const {
+const std::vector<std::shared_ptr<Card>> &Player::getHand() const
+{
     return hand;
 }
 
-void Player::placeBet(float amount) {
-    if (canBet(amount)) {
+void Player::placeBet(float amount)
+{
+    if (canBet(amount))
+    {
         money -= amount;
         currentBet += amount;
     }
 }
 
-void Player::addWinnings(float amount) {
+void Player::addWinnings(float amount)
+{
     money += amount;
 }
 
-float Player::getMoney() const {
+float Player::getMoney() const
+{
     return money;
 }
 
-float Player::getCurrentBet() const {
+float Player::getCurrentBet() const
+{
     return currentBet;
 }
 
-bool Player::canBet(float amount) const {
+bool Player::canBet(float amount) const
+{
     return amount <= money;
 }
 
@@ -55,23 +65,34 @@ void Player:setCurrentBet(float newBet) {
     currentBet = newBet;
 }
 
-const std::string& Player::getName() const {
+const std::string &Player::getName() const
+{
     return name;
 }
 
-bool Player::isBusted() const {
+bool Player::isBusted() const
+{
     return calculateHandTotal() > 21;
 }
 
-// Functions below required to use the wildcards
-void Player::addWildcard(std::shared_ptr<Wildcard> wildcard)
+void Player::addWildcard(std::shared_ptr<Wildcard> card)
 {
-    wildcards.push_back(wildcard);
+    if (card)
+    {
+        wildcards.push_back(card);
+    }
 }
 
-void Player::clearWildcards()
+bool Player::useWildcard(size_t index, std::vector<Player> &allPlayers)
 {
-    wildcards.clear();
+    if (index >= wildcards.size())
+    {
+        return false;
+    }
+
+    wildcards[index]->use(*this, allPlayers);
+    wildcards.erase(wildcards.begin() + index);
+    return true;
 }
 
 const std::vector<std::shared_ptr<Wildcard>> &Player::getWildcards() const
@@ -79,11 +100,21 @@ const std::vector<std::shared_ptr<Wildcard>> &Player::getWildcards() const
     return wildcards;
 }
 
-void Player::useWildcard(int index, std::vector<Player> &allPlayers)
+bool Player::hasWildcards() const
 {
-    if (index >= 0 && index < wildcards.size())
+    return !wildcards.empty();
+}
+
+void Player::clearWildcards()
+{
+    wildcards.clear();
+}
+
+void Player::doubleBet()
+{
+    if (canBet(currentBet))
     {
-        wildcards[index]->use(*this, allPlayers);
-        wildcards.erase(wildcards.begin() + index);
+        money -= currentBet;
+        currentBet *= 2;
     }
 }
