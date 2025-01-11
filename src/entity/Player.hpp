@@ -15,6 +15,7 @@ public:
     void clearHand();
     int calculateHandTotal() const;
     const std::vector<std::shared_ptr<Card>> &getHand() const;
+    void setTotal();
 
     // Money management
     void placeBet(float amount);

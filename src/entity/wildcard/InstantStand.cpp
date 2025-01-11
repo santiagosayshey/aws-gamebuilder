@@ -1,4 +1,4 @@
-/*
+
 #include "Wildcard.hpp"
 #include "entity/Player.hpp"
 
@@ -10,7 +10,7 @@ public:
 
     void use(Player &owner, std::vector<Player> &allPlayers) override
     {
-        player.setTotal(20)
+        owner.setTotal();
     }
 
     std::string getName() const override
@@ -28,4 +28,3 @@ public:
         return Timing::ANY_TIME;
     }
 };
-*/

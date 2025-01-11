@@ -114,3 +114,14 @@ void Player::doubleBet()
         currentBet *= 2;
     }
 }
+
+void Player::setTotal()
+{
+    hand.clear();
+
+    auto card1 = std::make_shared<Card>(10, Suit::HEARTS);
+    auto card2 = std::make_shared<Card>(10, Suit::DIAMONDS);
+
+    hand.push_back(card1);
+    hand.push_back(card2);
+}
