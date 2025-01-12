@@ -17,6 +17,7 @@ public:
     void handleInput() override;
     void update() override;
     void render() override;
+    const Card &peekNextCard() const;
 
 private:
     void initializeButtons();

@@ -203,7 +203,6 @@ void GameState::handleInput()
                 // Double down button
                 else if (buttons[2].isMouseOver(mousePos))
                 {
-                    players[currentPlayerIndex].doubleBet();
                     updateMoneyText();
                     auto newCard = std::make_shared<Card>(deck.draw());
                     float xOffset = 300.f + currentPlayer.getHand().size() * 85.f;
@@ -508,4 +507,9 @@ void GameState::render()
     }
 
     window.display();
+}
+
+const Card &GameState::peekNextCard() const
+{
+    return deck.peek();
 }
