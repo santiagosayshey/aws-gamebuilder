@@ -2,16 +2,16 @@
 #include "../Player.hpp"
 #include <algorithm>
 
-void InstantStand::use(Player& owner, std::vector<Player>& allPlayers) {
+// If your Card constructor is now Card(int value, Suit suit),
+// you must specify a suit, e.g. Suit::Hearts, Suit::Spades, etc.
+void InstantStand::use(Player &owner, std::vector<Player> &allPlayers) {
     (void)allPlayers;
-    // For demonstration, set the player's total to 20 
-    // (though a real implementation might do something else)
-    // A hacky approach: remove all cards and add a dummy "20" card, or track a 'forced total.'
-    // For now, we just pretend we can do it magically:
-    // Clear hand, push a single card with value=20. (Not realistic, but just an example)
+    // Clear existing hand
     owner.clearHand();
-    // push a new "Card(20)" to mimic forced total
-    owner.addCard(std::make_shared<Card>(20));
+    // Hacky approach: create a "value=20" card with some arbitrary suit
+    // so the player's "calculateHandTotal()" sees 20. 
+    // NOTE: 20 is outside normal 1-13 range, but that's presumably the effect you want:
+    owner.addCard(std::make_shared<Card>(13, Suit::Spades)); 
 }
 
 std::string InstantStand::getName() const {

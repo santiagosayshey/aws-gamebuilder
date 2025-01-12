@@ -1,7 +1,29 @@
 #include "GameState.hpp"
-#include <iostream>     // For logging
+#include <iostream>
 #include <cmath>
-#include <algorithm>    // for std::max, std::min
+#include <algorithm>
+
+// Just for clarity, define card geometry
+static const float CARD_WIDTH = 80.f;
+static const float CARD_HEIGHT = 120.f;
+
+// Helper to create a fancy card shape
+sf::RectangleShape createCardShape(const sf::Vector2f& position,
+                                   const sf::Color& topColor,
+                                   const sf::Color& bottomColor)
+{
+    sf::RectangleShape shape;
+    shape.setSize(sf::Vector2f(CARD_WIDTH, CARD_HEIGHT));
+    shape.setPosition(position);
+    shape.setOutlineThickness(2.f);
+    shape.setOutlineColor(sf::Color::Black);
+
+    // For simplicity, we just set a single fill color,
+    // but you could do a vertex-based gradient if you want.
+    shape.setFillColor(topColor);
+
+    return shape;
+}
 
 GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     : State(window)
@@ -9,67 +31,80 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     , currentPlayerIndex(0)
     , roundInProgress(false)
     , roundConcluded(false)
-    // Default-construct the buttons with dummy arguments
-    , hitButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(0.f, 0.f), "", sf::Font())
-    , standButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(0.f, 0.f), "", sf::Font())
-    , wildcardButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(0.f, 0.f), "", sf::Font())
+    // We'll fix the font afterwards
+    , hitButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f, 50.f), "HIT", sf::Font())
+    , standButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f, 50.f), "STAND", sf::Font())
+    , wildcardButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f, 50.f), "WILDCARD", sf::Font())
 {
-    std::cout << "[GameState::CTOR] Begin constructor\n";
+    std::cout << "[GameState::CTOR] Begin\n";
+    std::cout << "  -> Number of players: " << settings.numPlayers << "\n";
 
-    // 1) Create the players
-    std::cout << "[GameState::CTOR] settings.numPlayers = " << settings.numPlayers << "\n";
+    // Create players
     players.reserve(settings.numPlayers);
     for (int i = 0; i < settings.numPlayers; ++i) {
         players.emplace_back("Player " + std::to_string(i + 1), settings.startingMoney);
-        std::cout << "  -> Created " << players.back().getName()
-                  << " with starting money = " << settings.startingMoney << "\n";
+        std::cout << "     Created " << players.back().getName()
+                  << " with $" << settings.startingMoney << "\n";
     }
 
-    // 2) Load a known local font (Troska.ttf) instead of scanning system paths
-    std::cout << "[GameState::CTOR] Loading local Casino.ttf...\n";
-    bool loaded = font.loadFromFile("src/assets/font/Casino.ttf");
+    // 1) Load a basic system font (e.g. "arial.ttf")
+    std::vector<std::string> systemFonts = {
+        "arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "C:/Windows/Fonts/Arial.ttf"
+    };
+    bool loaded = false;
+    for (auto& path : systemFonts) {
+        if (font.loadFromFile(path)) {
+            loaded = true;
+            std::cout << "[GameState] Loaded system font: " << path << "\n";
+            break;
+        }
+    }
     if (!loaded) {
-        std::cerr << "[GameState::CTOR] ERROR: Could not load src/assets/font/Casino.ttf\n";
-        // handle error or exit if you want
-    } else {
-        std::cout << "[GameState::CTOR] SUCCESS: Loaded Casino.ttf.\n";
+        std::cerr << "[GameState::CTOR] ERROR: Could not load a system font.\n";
     }
 
-    // 3) Now that font is loaded, properly construct the 3 buttons with real data
+    // 2) Position the buttons along the bottom, spaced out horizontally
+    const float buttonY = window.getSize().y - 70.f; // 70px from the top is the button height
+    const float buttonSpacing = 200.f;               // Horizontal spacing
+    sf::Vector2f hitPos(50.f, buttonY);
+    sf::Vector2f standPos(hitPos.x + buttonSpacing, buttonY);
+    sf::Vector2f wildcardPos(standPos.x + buttonSpacing, buttonY);
+
+    // Re-initialize the buttons with real font & new positions
     hitButton = Button(
-        sf::Vector2f(50.f, 600.f),
-        sf::Vector2f(150.f, 50.f),
+        hitPos,
+        sf::Vector2f(120.f, 50.f),
         "HIT",
         font,
         sf::Color::White,
         sf::Color::Yellow
     );
     standButton = Button(
-        sf::Vector2f(220.f, 600.f),
-        sf::Vector2f(150.f, 50.f),
+        standPos,
+        sf::Vector2f(120.f, 50.f),
         "STAND",
         font,
         sf::Color::White,
         sf::Color::Yellow
     );
     wildcardButton = Button(
-        sf::Vector2f(390.f, 600.f),
-        sf::Vector2f(150.f, 50.f),
+        wildcardPos,
+        sf::Vector2f(120.f, 50.f),
         "WILDCARD",
         font,
         sf::Color::White,
         sf::Color::Yellow
     );
 
-    // 4) Shuffle main deck, and wildcard deck if enabled
-    std::cout << "[GameState::CTOR] Shuffling main deck...\n";
+    // Shuffle decks
     deck.shuffle();
     if (settings.wildcardEnabled) {
-        std::cout << "[GameState::CTOR] Wildcards enabled; shuffling wildcard deck...\n";
         wildcardDeck.shuffle();
     }
 
-    // 5) Setup SFML text objects
+    // Setup text objects
     roundInfoText.setFont(font);
     roundInfoText.setCharacterSize(24);
     roundInfoText.setFillColor(sf::Color::White);
@@ -78,40 +113,34 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     wildcardInfoText.setFont(font);
     wildcardInfoText.setCharacterSize(24);
     wildcardInfoText.setFillColor(sf::Color::Cyan);
-    wildcardInfoText.setPosition(50.f, 100.f);
+    wildcardInfoText.setPosition(50.f, 90.f);
 
     messageText.setFont(font);
-    messageText.setCharacterSize(28);
+    messageText.setCharacterSize(26);
     messageText.setFillColor(sf::Color::Yellow);
-    messageText.setPosition(50.f, 150.f);
+    messageText.setPosition(50.f, 140.f);
 
-    // 6) Start the first round
-    std::cout << "[GameState::CTOR] About to call startNewRound()...\n";
+    // Start round
     startNewRound();
-    std::cout << "[GameState::CTOR] End constructor.\n\n";
+    std::cout << "[GameState::CTOR] End\n";
 }
 
 void GameState::startNewRound() {
-    std::cout << "[GameState::startNewRound] Clearing hands/wildcards, resetting decks...\n";
+    std::cout << "[GameState::startNewRound] Clear + reset\n";
     roundConcluded = false;
 
-    // Clear previous hands, bets, etc.
     for (auto& p : players) {
         p.clearHand();
         p.clearWildcards();
     }
 
-    // Reset & shuffle main deck
     deck.reset();
     if (settings.wildcardEnabled) {
         wildcardDeck.reset();
     }
 
-    std::cout << "[GameState::startNewRound] Dealing initial cards...\n";
     dealInitialCards();
-
     if (settings.wildcardEnabled) {
-        std::cout << "[GameState::startNewRound] Dealing wildcards...\n";
         dealWildcards();
     }
 
@@ -120,7 +149,6 @@ void GameState::startNewRound() {
     messageText.setString("");
 
     updateLabels();
-    std::cout << "[GameState::startNewRound] Done.\n";
 }
 
 void GameState::dealInitialCards() {
@@ -130,7 +158,7 @@ void GameState::dealInitialCards() {
             p.addCard(std::make_shared<Card>(c));
         }
     }
-    std::cout << "[GameState::dealInitialCards] Dealt 2 cards to each player.\n";
+    std::cout << "[GameState::dealInitialCards] 2 cards each\n";
 }
 
 void GameState::dealWildcards() {
@@ -139,55 +167,42 @@ void GameState::dealWildcards() {
         p.addWildcard(w);
         std::cout << "  -> " << p.getName() << " got wildcard [" << w->getName() << "]\n";
     }
-    std::cout << "[GameState::dealWildcards] Dealt 1 wildcard to each player.\n";
 }
 
 void GameState::handleInput() {
     sf::Event event;
     while (window.pollEvent(event)) {
-        // For logging
-        // This might spam the console, but helps debug
-        // std::cout << "[handleInput] Event type: " << event.type << "\n";
-
         if (event.type == sf::Event::Closed) {
-            std::cout << "  -> Window closed event\n";
             window.close();
         }
         else if (event.type == sf::Event::MouseButtonPressed) {
             if (event.mouseButton.button == sf::Mouse::Left) {
                 sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
-                
+
                 // HIT
                 if (hitButton.isMouseOver(mousePos) && roundInProgress && !roundConcluded) {
-                    std::cout << "  -> HIT button clicked\n";
                     Player& current = players[currentPlayerIndex];
                     Card c = deck.draw();
                     current.addCard(std::make_shared<Card>(c));
                     if (current.isBusted()) {
-                        std::cout << "  -> " << current.getName() << " BUSTED!\n";
                         messageText.setString(current.getName() + " BUSTED!");
                     }
                     updateLabels();
                 }
                 // STAND
                 else if (standButton.isMouseOver(mousePos) && roundInProgress && !roundConcluded) {
-                    std::cout << "  -> STAND button clicked\n";
                     messageText.setString(players[currentPlayerIndex].getName() + " stands.");
                     nextPlayer();
                 }
                 // WILDCARD
                 else if (wildcardButton.isMouseOver(mousePos) && roundInProgress && !roundConcluded) {
-                    std::cout << "  -> WILDCARD button clicked\n";
                     Player& current = players[currentPlayerIndex];
                     if (current.hasWildcards()) {
-                        // Use the first wildcard
                         if (current.useWildcard(0, players)) {
-                            std::cout << "  -> " << current.getName() << " used wildcard [index 0]\n";
                             messageText.setString(current.getName() + " used a wildcard!");
                             updateLabels();
                         }
                     } else {
-                        std::cout << "  -> " << current.getName() << " has no wildcards.\n";
                         messageText.setString("No wildcards to use!");
                     }
                 }
@@ -203,44 +218,34 @@ void GameState::handleInput() {
 }
 
 void GameState::update() {
-    // Called once per frame (60 fps, etc.)
-    if (!roundInProgress || roundConcluded) {
-        return;
-    }
+    if (!roundInProgress || roundConcluded) return;
 
     Player& current = players[currentPlayerIndex];
-    if (current.isBusted() || current.calculateHandTotal() == 21) {
-        std::cout << "[GameState::update] " << current.getName()
-                  << " done or at 21 -> nextPlayer()\n";
+    int total = current.calculateHandTotal();
+    if (current.isBusted() || total == 21) {
         nextPlayer();
     }
-
     if (currentPlayerIndex >= (int)players.size()) {
         concludeRound();
     }
 
-    float deltaTime = 1.f / 60.f;
-    hitButton.update(deltaTime);
-    standButton.update(deltaTime);
-    wildcardButton.update(deltaTime);
+    float dt = 1.f / 60.f;
+    hitButton.update(dt);
+    standButton.update(dt);
+    wildcardButton.update(dt);
 }
 
 void GameState::nextPlayer() {
-    std::cout << "[GameState::nextPlayer] currentPlayerIndex was " 
-              << currentPlayerIndex << ", incrementing...\n";
     currentPlayerIndex++;
     if (currentPlayerIndex >= (int)players.size()) {
-        std::cout << "  -> currentPlayerIndex == players.size(), concludeRound\n";
         concludeRound();
     } else {
-        std::cout << "  -> new currentPlayerIndex = " << currentPlayerIndex << "\n";
         messageText.setString("");
         updateLabels();
     }
 }
 
 void GameState::concludeRound() {
-    std::cout << "[GameState::concludeRound] Start.\n";
     roundInProgress = false;
     roundConcluded = true;
 
@@ -249,8 +254,6 @@ void GameState::concludeRound() {
     for (int i = 0; i < (int)players.size(); ++i) {
         if (!players[i].isBusted()) {
             int score = players[i].calculateHandTotal();
-            std::cout << "  -> " << players[i].getName()
-                      << " final total = " << score << "\n";
             if (score > bestScore) {
                 bestScore = score;
                 winners.clear();
@@ -259,23 +262,18 @@ void GameState::concludeRound() {
             else if (score == bestScore) {
                 winners.push_back(i);
             }
-        } else {
-            std::cout << "  -> " << players[i].getName() << " is busted.\n";
         }
     }
-
     if (winners.empty()) {
         messageText.setString("Everyone busted. No winners!");
-        std::cout << "  -> Everyone busted!\n";
     } else {
-        std::string winnerNames;
+        std::string names;
         for (auto w : winners) {
-            winnerNames += players[w].getName() + " ";
+            names += players[w].getName() + " ";
         }
-        messageText.setString("Winner(s): " + winnerNames + " with " + std::to_string(bestScore));
-        std::cout << "  -> Winner(s): " << winnerNames << "with " << bestScore << "\n";
+        messageText.setString("Winner(s): " + names
+                             + " with " + std::to_string(players[winners[0]].calculateHandTotal()));
     }
-    std::cout << "[GameState::concludeRound] End.\n";
 }
 
 void GameState::updateLabels() {
@@ -283,7 +281,7 @@ void GameState::updateLabels() {
         Player& current = players[currentPlayerIndex];
         int total = current.calculateHandTotal();
         roundInfoText.setString(current.getName() + " - Total: " + std::to_string(total));
-        
+
         if (current.hasWildcards()) {
             std::string wText = "Wildcards: ";
             for (auto& w : current.getWildcards()) {
@@ -301,15 +299,107 @@ void GameState::updateLabels() {
 }
 
 void GameState::render() {
-    window.clear(sf::Color(30, 30, 30));
+    window.clear(sf::Color(20, 100, 20));  // deeper green
 
+    // Decorative swirl
+    float centerX = window.getSize().x / 2.f;
+    float centerY = window.getSize().y / 2.f;
+    for (int i = 0; i < 8; ++i) {
+        sf::CircleShape swirl(100.f + i * 30.f, 64);
+        swirl.setFillColor(sf::Color(0, 0, 0, 0));
+        swirl.setOutlineThickness(2.f);
+        swirl.setOutlineColor(sf::Color(0, 150 - i * 15, 0, 100));
+        swirl.setOrigin(swirl.getRadius(), swirl.getRadius());
+        swirl.setPosition(centerX, centerY);
+        swirl.rotate(i * 15.f);
+        window.draw(swirl);
+    }
+
+    // Buttons
     hitButton.draw(window);
     standButton.draw(window);
     wildcardButton.draw(window);
 
+    // Info texts
     window.draw(roundInfoText);
     window.draw(wildcardInfoText);
     window.draw(messageText);
+
+    // Circular layout for players
+    float radius = 250.f; 
+    float angleStep = 360.f / players.size();
+
+    for (size_t i = 0; i < players.size(); ++i) {
+        Player& p = players[i];
+        float angleDeg = angleStep * i - 90; // start top
+        float angleRad = angleDeg * 3.14159f / 180.f;
+        float px = centerX + radius * std::cos(angleRad);
+        float py = centerY + radius * std::sin(angleRad);
+
+        // Highlight if current
+        if ((int)i == currentPlayerIndex) {
+            sf::CircleShape highlight(60.f);
+            highlight.setFillColor(sf::Color(255, 255, 0, 50));
+            highlight.setOrigin(highlight.getRadius(), highlight.getRadius());
+            highlight.setPosition(px, py);
+            window.draw(highlight);
+        }
+
+        // Player name
+        sf::Text nameText;
+        nameText.setFont(font);
+        nameText.setString(p.getName());
+        nameText.setCharacterSize(24);
+        nameText.setFillColor(sf::Color::White);
+        sf::FloatRect nb = nameText.getLocalBounds();
+        nameText.setOrigin(nb.width/2.f, nb.height);
+        nameText.setPosition(px, py - 70.f);
+        window.draw(nameText);
+
+        // Cards
+        float cardOffsetX = px - (CARD_WIDTH + 10.f)*(p.getHand().size()/2.f);
+        float cardOffsetY = py - CARD_HEIGHT/2.f;
+
+        for (size_t cIndex = 0; cIndex < p.getHand().size(); ++cIndex) {
+            auto& card = p.getHand()[cIndex];
+            float cx = cardOffsetX + cIndex*(CARD_WIDTH + 10.f);
+            float cy = cardOffsetY;
+
+            sf::RectangleShape cardShape = createCardShape(
+                sf::Vector2f(cx, cy),
+                sf::Color(255, 255, 255),
+                sf::Color(200, 200, 200)
+            );
+            window.draw(cardShape);
+
+            sf::Text cardText;
+            cardText.setFont(font);
+            cardText.setCharacterSize(20);
+            cardText.setFillColor(sf::Color::Black);
+            cardText.setString(card->toString());
+            sf::FloatRect cb = cardText.getLocalBounds();
+            cardText.setOrigin(cb.width/2.f, cb.height/2.f);
+            cardText.setPosition(cx + CARD_WIDTH/2.f, cy + CARD_HEIGHT/2.f);
+            window.draw(cardText);
+        }
+
+        // Wildcards
+        if (p.hasWildcards()) {
+            sf::Text wcLabel;
+            wcLabel.setFont(font);
+            wcLabel.setCharacterSize(18);
+            wcLabel.setFillColor(sf::Color::Yellow);
+            std::string wildcardSummary;
+            for (auto& w : p.getWildcards()) {
+                wildcardSummary += w->getName() + " ";
+            }
+            wcLabel.setString("WC: " + wildcardSummary);
+            sf::FloatRect wb = wcLabel.getLocalBounds();
+            wcLabel.setOrigin(wb.width/2.f, 0.f);
+            wcLabel.setPosition(px, py + 70.f);
+            window.draw(wcLabel);
+        }
+    }
 
     window.display();
 }

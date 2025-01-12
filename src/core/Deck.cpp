@@ -1,19 +1,19 @@
 #include "Deck.hpp"
-#include <algorithm>
+#include <algorithm> // for std::shuffle
 #include <random>
 
 Deck::Deck() {
     initialize();
+    shuffle();
 }
 
 void Deck::initialize() {
     cards.clear();
-    // Example of a simple “1–10” deck with 4 suits:
-    for (int suit = 0; suit < 4; ++suit) {
-        for (int value = 1; value <= 10; ++value) {
-            // We store Card( value ), ignoring suit if your Card struct 
-            // doesn't handle suits yet. Or you can store an enum Suit if needed.
-            cards.emplace_back(value);
+    // Create a standard 52-card deck: 4 suits, 13 ranks each
+    for (int s = 0; s < 4; ++s) {
+        Suit suit = static_cast<Suit>(s);
+        for (int v = 1; v <= 13; ++v) {
+            cards.emplace_back(v, suit);
         }
     }
 }
@@ -26,12 +26,13 @@ void Deck::shuffle() {
 
 Card Deck::draw() {
     if (cards.empty()) {
+        // If somehow empty, re-init
         initialize();
         shuffle();
     }
-    Card card = cards.back();
+    Card top = cards.back();
     cards.pop_back();
-    return card;
+    return top;
 }
 
 void Deck::reset() {
