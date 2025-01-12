@@ -155,8 +155,9 @@ void GameState::initializeWildcards(){
     std::cout << "Added Extra Bet wildcard." << std::endl;
     wildcardDeck.push_back(std::make_shared<Tycoon>());
     std::cout << "Added Tycoon wildcard." << std::endl;
-    //wildcardDeck.push_back(std::make_shared<Foresight>());
-    //wildcardDeck.push_back(std::make_shared<InstantStand>());
+    wildcardDeck.push_back(std::make_shared<InstantStand>());
+    std::cout << "Added Instant Stand wildcard." << std::endl;
+     //wildcardDeck.push_back(std::make_shared<Foresight>());
     //wildcardDeck.push_back(std::make_shared<BalanceShift>());
     //wildcardDeck.push_back(std::make_shared<SafeHit>());
 }

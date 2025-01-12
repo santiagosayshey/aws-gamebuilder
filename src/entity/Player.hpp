@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 #include "Card.hpp"
-#include "./entity/Wildcards/Wildcards.hpp"
+#include "./entity/wildcard/Wildcard.hpp"
 
 class Player
 {
@@ -22,7 +22,7 @@ public:
     void addWinnings(float amount);
     float getMoney() const;
     float getCurrentBet() const;
-    void setCurrentBet(float newBet);
+    void setCurrentBet(float newBet) const;
     bool canBet(float amount) const;
 
     // Getters
