@@ -8,7 +8,7 @@
 #include "../entity/Wildcards/Duplicate.cpp"
 
 GameState::GameState(sf::RenderWindow &window, const GameSettings &settings)
-    : State(window), currentPlayerIndex(0), dealer("Dealer", 0.0f), playerTurn(true), gameOver(false), dealerRevealed(false), bettingPhase(true), minBet(settings.minBet), deck()
+    : State(window), settings(settings), dealer("Dealer", 0.0f), playerTurn(true), gameOver(false), dealerRevealed(false), bettingPhase(true), minBet(settings.minBet), deck()
 {
     // Initialize players
     for (int i = 0; i < settings.numPlayers; ++i)
@@ -148,12 +148,12 @@ void GameState::initializeWildcards(){
     wildcardDeck.clear();
     std::cout << "Initializing wildcards..." << std::endl;
 
-    // Add instances of all wildcards
-    wildcardDeck.push_back(std::unique_ptr<Wildcard>(new Duplicate()));
+   // Add instances of all wildcards
+    wildcardDeck.push_back(std::make_shared<Duplicate>());
     std::cout << "Added Duplicate wildcard." << std::endl;
-    wildcardDeck.push_back(std::unique_ptr<Wildcard>(new ExtraBet()));
+    wildcardDeck.push_back(std::make_shared<ExtraBet>());
     std::cout << "Added Extra Bet wildcard." << std::endl;
-    wildcardDeck.push_back(std::unique_ptr<Wildcard>(new Tycoon()));
+    wildcardDeck.push_back(std::make_shared<Tycoon>());
     std::cout << "Added Tycoon wildcard." << std::endl;
     //wildcardDeck.push_back(std::make_shared<Foresight>());
     //wildcardDeck.push_back(std::make_shared<InstantStand>());
@@ -333,6 +333,11 @@ void GameState::dealInitialCards()
         auto card = std::make_shared<Card>(deck.draw());
         card->setPosition(sf::Vector2f(300.f + i * 85.f, 100.f));
         dealer.addCard(card);
+    }
+
+    // Distribute the wildcard
+    if (settings.wildcardEnabled) {
+        distributeWildcards();
     }
 
     playerTurn = true;
@@ -536,6 +541,7 @@ void GameState::render()
 
 void GameState::shuffleWildcards()
 {
+    // Ensure it is randomly distributed
     std::random_device rd;
     std::mt19937 g(rd());
     std::shuffle(wildcardDeck.begin(), wildcardDeck.end(), g);

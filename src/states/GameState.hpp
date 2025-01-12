@@ -67,4 +67,6 @@ private:
     sf::Text dealerScoreText;
     sf::Text messageText;
     sf::Text currentPlayerText; // Shows which player's turn it is
+
+    GameSettings settings; // Need "settings" to ensure wildcard is enabled
 };
