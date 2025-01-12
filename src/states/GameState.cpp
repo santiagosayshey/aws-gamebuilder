@@ -146,20 +146,10 @@ sf::Vector2f GameState::getMousePosition() const
 
 void GameState::initializeWildcards(){
     wildcardDeck.clear();
-    std::cout << "Initializing wildcards..." << std::endl;
 
-   // Add instances of all wildcards
-    wildcardDeck.push_back(std::make_shared<Duplicate>());
-    std::cout << "Added Duplicate wildcard." << std::endl;
-    wildcardDeck.push_back(std::make_shared<ExtraBet>());
-    std::cout << "Added Extra Bet wildcard." << std::endl;
-    wildcardDeck.push_back(std::make_shared<Tycoon>());
-    std::cout << "Added Tycoon wildcard." << std::endl;
-    wildcardDeck.push_back(std::make_shared<InstantStand>());
-    std::cout << "Added Instant Stand wildcard." << std::endl;
-     //wildcardDeck.push_back(std::make_shared<Foresight>());
-    //wildcardDeck.push_back(std::make_shared<BalanceShift>());
-    //wildcardDeck.push_back(std::make_shared<SafeHit>());
+
+    
+    
 }
 
 void GameState::handleInput()

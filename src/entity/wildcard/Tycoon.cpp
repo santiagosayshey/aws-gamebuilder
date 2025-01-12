@@ -1,11 +1,13 @@
-#include "Wildcard.hpp"
+#include "Tycoon.hpp"
 #include "entity/Player.hpp"
 
 class Tycoon : public Wildcard {
 public:
-    virtual ~Tycoon() {}
+    Tycoon::Tycoon() {}
 
-    void use(Player& owner, std::vector<Player>& players) override {
+    Tycoon::~Tycoon() {}
+
+    void Tycoon::use(Player& owner, std::vector<Player>& players) override {
         (void)players;
         // Get current money
         float currentMoney = owner.getMoney();
@@ -14,15 +16,15 @@ public:
         owner.addWinnings(currentMoney);
     }
 
-    std::string getName() const override {
+    std::string Tycoon::getName() const override {
         return "Tycoon";
     }
 
-    std::string getDescription() const override {
+    std::string Tycoon::getDescription() const override {
         return "Doubles your winnings";
     }
 
-    Timing getUsageTiming() const override {
+    Timing Tycoon::getUsageTiming() const override {
         return Timing::ANY_TIME;
     }
 };

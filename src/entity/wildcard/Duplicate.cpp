@@ -1,13 +1,16 @@
-#include "Wildcard.hpp"
+#include "Duplicate.hpp"
 #include "entity/Player.hpp"
 #include <random>
 
 class Duplicate : public Wildcard
 {
 public:
-    virtual ~Duplicate(){}
+    
+    Duplicate::Duplicate() {}
 
-    void use(Player& owner, std::vector<Player>& players) override {
+    Duplicate::~Duplicate() {}
+
+    void Duplicate::use(Player& owner, std::vector<Player>& players) override {
         std::vector<std::shared_ptr<Wildcard>> availableWildcards;
 
         // Collect all valid wildcards from other players
@@ -20,8 +23,6 @@ public:
                 }
             }
         }
-
-        // If there are available wildcards, select one randomly and add it to the owner's wildcards
         if (!availableWildcards.empty()) {
             std::random_device rd;
             std::mt19937 gen(rd());
@@ -34,15 +35,15 @@ public:
         }
     }
 
-    std::string getName() const override {
+    std::string Duplicate::getName() const override {
         return "Duplicate";
     }
 
-    std::string getDescription() const override {
+    std::string Duplicate::getDescription() const override {
         return "Allows you to duplicate a random wildcard from another player.";
     }
 
-    Timing getUsageTiming() const override {
+    Timing Duplicate::getUsageTiming() const override {
         return Timing:: ANY_TIME;
     }
 };
