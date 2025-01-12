@@ -6,6 +6,7 @@ public:
     virtual ~ExtraBet() {}
 
     void use(Player& owner, std::vector<Player>& players) override {
+        (void)players;
         // Get current bet
         float currentBet = owner.getCurrentBet();
         

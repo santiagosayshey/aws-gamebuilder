@@ -42,7 +42,7 @@ public:
         return "Allows you to duplicate a random wildcard from another player.";
     }
 
-    Timing getTiming() const override {
+    Timing getUsageTiming() const override {
         return Timing:: ANY_TIME;
     }
 };

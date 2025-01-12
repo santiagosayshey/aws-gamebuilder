@@ -4,6 +4,7 @@
 #include "../entity/Player.hpp"
 #include "../entity/Card.hpp"
 #include "../entity/Deck.hpp"
+#include "../entity/Wildcards/Wildcards.hpp" // either Wildcard.hpp or Wildcards.hpp depending on whose version
 #include "GameSettingsState.hpp"
 #include <vector>
 #include <memory>
@@ -34,6 +35,13 @@ private:
     void updateMoneyText();
     void nextPlayer(); // Move to next player's turn
     size_t getCurrentPlayerIndex() const { return currentPlayerIndex; }
+
+    // Wildcard deck for integration
+    std::vector<std::shared_ptr<Wildcard>> wildcardDeck;
+    void initializeWildcards();
+    void shuffleWildcards();
+    void distributeWildcards();
+    void clearPlayerWildcards();
 
     sf::Font font;
     std::vector<Button> buttons;

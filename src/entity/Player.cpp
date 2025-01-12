@@ -61,7 +61,7 @@ bool Player::canBet(float amount) const
     return amount <= money;
 }
 
-void Player:setCurrentBet(float newBet) {
+void Player::setCurrentBet(float newBet) {
     currentBet = newBet;
 }
 

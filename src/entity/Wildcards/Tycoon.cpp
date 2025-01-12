@@ -6,6 +6,7 @@ public:
     virtual ~Tycoon() {}
 
     void use(Player& owner, std::vector<Player>& players) override {
+        (void)players;
         // Get current money
         float currentMoney = owner.getMoney();
         

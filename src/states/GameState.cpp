@@ -136,6 +136,19 @@ sf::Vector2f GameState::getMousePosition() const
     return window.mapPixelToCoords(sf::Mouse::getPosition(window));
 }
 
+void GameState::initializeWildcards(){
+    wildcardDeck.clear();
+
+    // Add instances of all wildcards
+    wildcardDeck.push_back(std::make_shared<Duplicate>());
+    wildcardDeck.push_back(std::make_shared<ExtraBet>());
+    //wildcardDeck.push_back(std::make_shared<Foresight>());
+    //wildcardDeck.push_back(std::make_shared<InstantStand>());
+    wildcardDeck.push_back(std::make_shared<Tycoon>());
+    //wildcardDeck.push_back(std::make_shared<BalanceShift>());
+    //wildcardDeck.push_back(std::make_shared<SafeHit>());
+}
+
 void GameState::handleInput()
 {
     sf::Event event;
@@ -507,6 +520,38 @@ void GameState::render()
     }
 
     window.display();
+}
+
+void GameState::shuffleWildcards()
+{
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(wildcardDeck.begin(), wildcardDeck.end(), g);
+}
+
+void GameState::distributeWildcards()
+{
+    // shuffle the wildcard deck
+    shuffleWildcards();
+
+    // distribute to the players
+    for (auto &player : players)
+    {
+        if (!wildcardDeck.empty())
+        {
+            auto wildcard = wildcardDeck.back();
+            player.addWildcard(wildcard);
+            wildcardDeck.pop_back();
+        }
+    }
+}
+
+void GameState::clearPlayerWildcards()
+{
+    for (auto &player : players)
+    {
+        player.clearWildcards();
+    }
 }
 
 const Card &GameState::peekNextCard() const
