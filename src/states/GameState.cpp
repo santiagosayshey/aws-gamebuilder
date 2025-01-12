@@ -1,418 +1,315 @@
 #include "GameState.hpp"
-#include <random>
-#include <algorithm>
-#include <sstream>
-#include <iomanip>
+#include <iostream>     // For logging
+#include <cmath>
+#include <algorithm>    // for std::max, std::min
 
 GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     : State(window)
+    , settings(settings)
     , currentPlayerIndex(0)
-    , dealer("Dealer", 0.0f)
-    , playerTurn(true)
-    , gameOver(false)
-    , dealerRevealed(false)
-    , bettingPhase(true)
-    , minBet(settings.minBet) 
+    , roundInProgress(false)
+    , roundConcluded(false)
+    // Default-construct the buttons with dummy arguments
+    , hitButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(0.f, 0.f), "", sf::Font())
+    , standButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(0.f, 0.f), "", sf::Font())
+    , wildcardButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(0.f, 0.f), "", sf::Font())
 {
-    // Initialize players
+    std::cout << "[GameState::CTOR] Begin constructor\n";
+
+    // 1) Create the players
+    std::cout << "[GameState::CTOR] settings.numPlayers = " << settings.numPlayers << "\n";
+    players.reserve(settings.numPlayers);
     for (int i = 0; i < settings.numPlayers; ++i) {
         players.emplace_back("Player " + std::to_string(i + 1), settings.startingMoney);
-    }
-    
-    if (!loadResources()) {
-        window.close();
-        return;
-    }
-    
-    initializeButtons();
-    updateMoneyText();
-}
-
-bool GameState::loadResources() {
-    std::vector<std::string> fontPaths = {
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "arial.ttf",
-        "C:/Windows/Fonts/arial.ttf",
-        "/System/Library/Fonts/Helvetica.ttf"
-    };
-    
-    bool fontLoaded = false;
-    for (const auto& path : fontPaths) {
-        if (font.loadFromFile(path)) {
-            fontLoaded = true;
-            break;
-        }
-    }
-    
-    if (!fontLoaded) {
-        std::cerr << "Error: Could not load font file." << std::endl;
-        return false;
+        std::cout << "  -> Created " << players.back().getName()
+                  << " with starting money = " << settings.startingMoney << "\n";
     }
 
-    // Initialize text elements for each player
-    float yOffset = 400.f;
-    for (size_t i = 0; i < players.size(); ++i) {
-        // Score text
-        sf::Text scoreText;
-        scoreText.setFont(font);
-        scoreText.setCharacterSize(24);
-        scoreText.setFillColor(sf::Color::White);
-        scoreText.setPosition(10.f, yOffset + i * 50.f);
-        playerScoreTexts.push_back(scoreText);
-
-        // Money text
-        sf::Text moneyText;
-        moneyText.setFont(font);
-        moneyText.setCharacterSize(24);
-        moneyText.setFillColor(sf::Color::White);
-        moneyText.setPosition(200.f, yOffset + i * 50.f);
-        playerMoneyTexts.push_back(moneyText);
-
-        // Bet text
-        sf::Text betText;
-        betText.setFont(font);
-        betText.setCharacterSize(24);
-        betText.setFillColor(sf::Color::White);
-        betText.setPosition(400.f, yOffset + i * 50.f);
-        playerBetTexts.push_back(betText);
+    // 2) Load a known local font (Troska.ttf) instead of scanning system paths
+    std::cout << "[GameState::CTOR] Loading local Casino.ttf...\n";
+    bool loaded = font.loadFromFile("src/assets/font/Casino.ttf");
+    if (!loaded) {
+        std::cerr << "[GameState::CTOR] ERROR: Could not load src/assets/font/Casino.ttf\n";
+        // handle error or exit if you want
+    } else {
+        std::cout << "[GameState::CTOR] SUCCESS: Loaded Casino.ttf.\n";
     }
 
-    // Dealer and message text setup
-    dealerScoreText.setFont(font);
-    dealerScoreText.setCharacterSize(24);
-    dealerScoreText.setFillColor(sf::Color::White);
-    dealerScoreText.setPosition(10, 50);
+    // 3) Now that font is loaded, properly construct the 3 buttons with real data
+    hitButton = Button(
+        sf::Vector2f(50.f, 600.f),
+        sf::Vector2f(150.f, 50.f),
+        "HIT",
+        font,
+        sf::Color::White,
+        sf::Color::Yellow
+    );
+    standButton = Button(
+        sf::Vector2f(220.f, 600.f),
+        sf::Vector2f(150.f, 50.f),
+        "STAND",
+        font,
+        sf::Color::White,
+        sf::Color::Yellow
+    );
+    wildcardButton = Button(
+        sf::Vector2f(390.f, 600.f),
+        sf::Vector2f(150.f, 50.f),
+        "WILDCARD",
+        font,
+        sf::Color::White,
+        sf::Color::Yellow
+    );
+
+    // 4) Shuffle main deck, and wildcard deck if enabled
+    std::cout << "[GameState::CTOR] Shuffling main deck...\n";
+    deck.shuffle();
+    if (settings.wildcardEnabled) {
+        std::cout << "[GameState::CTOR] Wildcards enabled; shuffling wildcard deck...\n";
+        wildcardDeck.shuffle();
+    }
+
+    // 5) Setup SFML text objects
+    roundInfoText.setFont(font);
+    roundInfoText.setCharacterSize(24);
+    roundInfoText.setFillColor(sf::Color::White);
+    roundInfoText.setPosition(50.f, 50.f);
+
+    wildcardInfoText.setFont(font);
+    wildcardInfoText.setCharacterSize(24);
+    wildcardInfoText.setFillColor(sf::Color::Cyan);
+    wildcardInfoText.setPosition(50.f, 100.f);
 
     messageText.setFont(font);
-    messageText.setCharacterSize(32);
-    messageText.setFillColor(sf::Color::White);
-    messageText.setPosition(300, 250);
+    messageText.setCharacterSize(28);
+    messageText.setFillColor(sf::Color::Yellow);
+    messageText.setPosition(50.f, 150.f);
 
-    currentPlayerText.setFont(font);
-    currentPlayerText.setCharacterSize(32);
-    currentPlayerText.setFillColor(sf::Color::Yellow);
-    currentPlayerText.setPosition(300, 200);
-
-    return true;
+    // 6) Start the first round
+    std::cout << "[GameState::CTOR] About to call startNewRound()...\n";
+    startNewRound();
+    std::cout << "[GameState::CTOR] End constructor.\n\n";
 }
 
-void GameState::initializeButtons() {
-    // Game buttons
-    buttons.emplace_back(
-        sf::Vector2f(600.f, 500.f), 
-        sf::Vector2f(100.f, 40.f), 
-        "Hit", 
-        font
-    );
+void GameState::startNewRound() {
+    std::cout << "[GameState::startNewRound] Clearing hands/wildcards, resetting decks...\n";
+    roundConcluded = false;
 
-    buttons.emplace_back(
-        sf::Vector2f(600.f, 550.f), 
-        sf::Vector2f(100.f, 40.f), 
-        "Stand", 
-        font
-    );
+    // Clear previous hands, bets, etc.
+    for (auto& p : players) {
+        p.clearHand();
+        p.clearWildcards();
+    }
 
-    // Betting buttons
-    buttons.emplace_back(
-        sf::Vector2f(300.f, 300.f), 
-        sf::Vector2f(150.f, 40.f), 
-        "Bet $10", 
-        font
-    );
+    // Reset & shuffle main deck
+    deck.reset();
+    if (settings.wildcardEnabled) {
+        wildcardDeck.reset();
+    }
 
-    buttons.emplace_back(
-        sf::Vector2f(300.f, 350.f), 
-        sf::Vector2f(150.f, 40.f), 
-        "Deal", 
-        font
-    );
+    std::cout << "[GameState::startNewRound] Dealing initial cards...\n";
+    dealInitialCards();
+
+    if (settings.wildcardEnabled) {
+        std::cout << "[GameState::startNewRound] Dealing wildcards...\n";
+        dealWildcards();
+    }
+
+    currentPlayerIndex = 0;
+    roundInProgress = true;
+    messageText.setString("");
+
+    updateLabels();
+    std::cout << "[GameState::startNewRound] Done.\n";
 }
 
-sf::Vector2f GameState::getMousePosition() const {
-    return window.mapPixelToCoords(sf::Mouse::getPosition(window));
+void GameState::dealInitialCards() {
+    for (int i = 0; i < 2; ++i) {
+        for (auto& p : players) {
+            Card c = deck.draw();
+            p.addCard(std::make_shared<Card>(c));
+        }
+    }
+    std::cout << "[GameState::dealInitialCards] Dealt 2 cards to each player.\n";
+}
+
+void GameState::dealWildcards() {
+    for (auto& p : players) {
+        auto w = wildcardDeck.draw();
+        p.addWildcard(w);
+        std::cout << "  -> " << p.getName() << " got wildcard [" << w->getName() << "]\n";
+    }
+    std::cout << "[GameState::dealWildcards] Dealt 1 wildcard to each player.\n";
 }
 
 void GameState::handleInput() {
     sf::Event event;
     while (window.pollEvent(event)) {
+        // For logging
+        // This might spam the console, but helps debug
+        // std::cout << "[handleInput] Event type: " << event.type << "\n";
+
         if (event.type == sf::Event::Closed) {
+            std::cout << "  -> Window closed event\n";
             window.close();
         }
-
-        if (event.type == sf::Event::MouseButtonPressed && 
-            event.mouseButton.button == sf::Mouse::Left) {
-            sf::Vector2f mousePos = getMousePosition();
-
-            if (bettingPhase) {
-                // Bet button
-                if (buttons[2].isMouseOver(mousePos) && players[currentPlayerIndex].canBet(minBet)) {
-                    players[currentPlayerIndex].placeBet(minBet);
-                    updateMoneyText();
-                }
-                // Deal button
-                else if (buttons[3].isMouseOver(mousePos) && players[currentPlayerIndex].getCurrentBet() > 0) {
-                    if (currentPlayerIndex < players.size() - 1) {
-                        // Move to next player's betting turn
-                        currentPlayerIndex++;
-                        updateMoneyText();
-                    } else {
-                        // All players have bet, start the game
-                        bettingPhase = false;
-                        currentPlayerIndex = 0;
-                        dealInitialCards();
+        else if (event.type == sf::Event::MouseButtonPressed) {
+            if (event.mouseButton.button == sf::Mouse::Left) {
+                sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+                
+                // HIT
+                if (hitButton.isMouseOver(mousePos) && roundInProgress && !roundConcluded) {
+                    std::cout << "  -> HIT button clicked\n";
+                    Player& current = players[currentPlayerIndex];
+                    Card c = deck.draw();
+                    current.addCard(std::make_shared<Card>(c));
+                    if (current.isBusted()) {
+                        std::cout << "  -> " << current.getName() << " BUSTED!\n";
+                        messageText.setString(current.getName() + " BUSTED!");
                     }
+                    updateLabels();
                 }
-            }
-            else if (!gameOver && playerTurn) {
-                Player& currentPlayer = players[currentPlayerIndex];
-                // Hit button
-                if (buttons[0].isMouseOver(mousePos)) {
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    std::uniform_int_distribution<> dis(1, 11);
-                    
-                    auto newCard = std::make_shared<Card>(dis(gen));
-                    float xOffset = 300.f + currentPlayer.getHand().size() * 85.f;
-                    float yOffset = 400.f + currentPlayerIndex * 50.f;
-                    newCard->setPosition(sf::Vector2f(xOffset, yOffset));
-                    currentPlayer.addCard(newCard);
-
-                    if (currentPlayer.isBusted()) {
-                        handleLoss(currentPlayer);
-                        nextPlayer();
-                    }
-                }
-                // Stand button
-                else if (buttons[1].isMouseOver(mousePos)) {
+                // STAND
+                else if (standButton.isMouseOver(mousePos) && roundInProgress && !roundConcluded) {
+                    std::cout << "  -> STAND button clicked\n";
+                    messageText.setString(players[currentPlayerIndex].getName() + " stands.");
                     nextPlayer();
                 }
-            }
-        }
-
-        // Mouse move for button highlights
-        if (event.type == sf::Event::MouseMoved) {
-            sf::Vector2f mousePos = getMousePosition();
-            for (auto& button : buttons) {
-                button.setHighlight(button.isMouseOver(mousePos));
-            }
-        }
-
-        // Handle restart
-        if (gameOver && event.type == sf::Event::KeyPressed && 
-            event.key.code == sf::Keyboard::R) {
-            bool anyPlayerCanBet = false;
-            for (const auto& player : players) {
-                if (player.canBet(minBet)) {
-                    anyPlayerCanBet = true;
-                    break;
+                // WILDCARD
+                else if (wildcardButton.isMouseOver(mousePos) && roundInProgress && !roundConcluded) {
+                    std::cout << "  -> WILDCARD button clicked\n";
+                    Player& current = players[currentPlayerIndex];
+                    if (current.hasWildcards()) {
+                        // Use the first wildcard
+                        if (current.useWildcard(0, players)) {
+                            std::cout << "  -> " << current.getName() << " used wildcard [index 0]\n";
+                            messageText.setString(current.getName() + " used a wildcard!");
+                            updateLabels();
+                        }
+                    } else {
+                        std::cout << "  -> " << current.getName() << " has no wildcards.\n";
+                        messageText.setString("No wildcards to use!");
+                    }
                 }
             }
-            
-            if (anyPlayerCanBet) {
-                startNewBet();
-            } else {
-                requestStateChange(StateChange::Menu);
-            }
+        }
+        else if (event.type == sf::Event::MouseMoved) {
+            sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+            hitButton.setHighlight(hitButton.isMouseOver(mousePos));
+            standButton.setHighlight(standButton.isMouseOver(mousePos));
+            wildcardButton.setHighlight(wildcardButton.isMouseOver(mousePos));
         }
     }
-}
-
-void GameState::nextPlayer() {
-    if (currentPlayerIndex < players.size() - 1) {
-        currentPlayerIndex++;
-    } else {
-        playerTurn = false;
-        dealerRevealed = true;
-        dealerPlay();
-    }
-}
-
-void GameState::dealInitialCards() {
-    // Clear all hands
-    for (auto& player : players) {
-        player.clearHand();
-    }
-    dealer.clearHand();
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(1, 11);
-
-    // Deal two cards to each player
-    for (size_t i = 0; i < players.size(); ++i) {
-        for (int j = 0; j < 2; ++j) {
-            auto card = std::make_shared<Card>(dis(gen));
-            float xOffset = 300.f + j * 85.f;
-            float yOffset = 400.f + i * 50.f;
-            card->setPosition(sf::Vector2f(xOffset, yOffset));
-            players[i].addCard(card);
-        }
-    }
-
-    // Deal to dealer
-    for (int i = 0; i < 2; ++i) {
-        auto card = std::make_shared<Card>(dis(gen));
-        card->setPosition(sf::Vector2f(300.f + i * 85.f, 100.f));
-        dealer.addCard(card);
-    }
-
-    playerTurn = true;
-    gameOver = false;
-    dealerRevealed = false;
-    currentPlayerIndex = 0;
-}
-
-void GameState::dealerPlay() {
-    while (dealer.calculateHandTotal() < 17) {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(1, 11);
-        
-        auto newCard = std::make_shared<Card>(dis(gen));
-        newCard->setPosition(sf::Vector2f(300.f + dealer.getHand().size() * 85.f, 100.f));
-        dealer.addCard(newCard);
-    }
-    checkGameOver();
-}
-
-void GameState::checkGameOver() {
-    gameOver = true;
-    dealerRevealed = true;
-    int dealerTotal = dealer.calculateHandTotal();
-    bool dealerBusted = dealer.isBusted();
-
-    for (auto& player : players) {
-        int playerTotal = player.calculateHandTotal();
-        
-        if (dealerBusted) {
-            if (!player.isBusted()) {
-                handleWin(player);
-            } else {
-                handleLoss(player);
-            }
-        } else if (player.isBusted()) {
-            handleLoss(player);
-        } else if (dealerTotal > playerTotal) {
-            handleLoss(player);
-        } else if (playerTotal > dealerTotal) {
-            handleWin(player);
-        } else {
-            handlePush(player);
-        }
-    }
-}
-
-void GameState::handleWin(Player& player) {
-    player.addWinnings(player.getCurrentBet() * 2);
-    updateMoneyText();
-}
-
-void GameState::handleLoss(Player& player) {
-    messageText.setString(player.getName() + " loses!");
-    updateMoneyText();
-}
-
-void GameState::handlePush(Player& player) {
-    player.addWinnings(player.getCurrentBet());
-    updateMoneyText();
-}
-
-void GameState::startNewBet() {
-    bettingPhase = true;
-    currentPlayerIndex = 0;
-    for (auto& player : players) {
-        player.clearHand();
-    }
-    dealer.clearHand();
-    updateMoneyText();
-    messageText.setString("");
-}
-
-void GameState::updateMoneyText() {
-    for (size_t i = 0; i < players.size(); ++i) {
-        const auto& player = players[i];
-        
-        std::stringstream ss;
-        ss << std::fixed << std::setprecision(2);
-        
-        // Update money text
-        ss << "Money: $" << player.getMoney();
-        playerMoneyTexts[i].setString(ss.str());
-        
-        // Update bet text
-        ss.str("");
-        ss << "Bet: $" << player.getCurrentBet();
-        playerBetTexts[i].setString(ss.str());
-    }
-
-    currentPlayerText.setString("Current Turn: Player " + 
-        std::to_string(currentPlayerIndex + 1));
 }
 
 void GameState::update() {
-    // Update player scores
-    for (size_t i = 0; i < players.size(); ++i) {
-        playerScoreTexts[i].setString("Player " + std::to_string(i + 1) + 
-            " Score: " + std::to_string(players[i].calculateHandTotal()));
+    // Called once per frame (60 fps, etc.)
+    if (!roundInProgress || roundConcluded) {
+        return;
     }
-    
-    // Update dealer score
-    if (dealerRevealed) {
-        dealerScoreText.setString("Dealer Score: " + 
-            std::to_string(dealer.calculateHandTotal()));
+
+    Player& current = players[currentPlayerIndex];
+    if (current.isBusted() || current.calculateHandTotal() == 21) {
+        std::cout << "[GameState::update] " << current.getName()
+                  << " done or at 21 -> nextPlayer()\n";
+        nextPlayer();
+    }
+
+    if (currentPlayerIndex >= (int)players.size()) {
+        concludeRound();
+    }
+
+    float deltaTime = 1.f / 60.f;
+    hitButton.update(deltaTime);
+    standButton.update(deltaTime);
+    wildcardButton.update(deltaTime);
+}
+
+void GameState::nextPlayer() {
+    std::cout << "[GameState::nextPlayer] currentPlayerIndex was " 
+              << currentPlayerIndex << ", incrementing...\n";
+    currentPlayerIndex++;
+    if (currentPlayerIndex >= (int)players.size()) {
+        std::cout << "  -> currentPlayerIndex == players.size(), concludeRound\n";
+        concludeRound();
     } else {
-        dealerScoreText.setString("Dealer Score: ?");
+        std::cout << "  -> new currentPlayerIndex = " << currentPlayerIndex << "\n";
+        messageText.setString("");
+        updateLabels();
+    }
+}
+
+void GameState::concludeRound() {
+    std::cout << "[GameState::concludeRound] Start.\n";
+    roundInProgress = false;
+    roundConcluded = true;
+
+    int bestScore = -1;
+    std::vector<int> winners;
+    for (int i = 0; i < (int)players.size(); ++i) {
+        if (!players[i].isBusted()) {
+            int score = players[i].calculateHandTotal();
+            std::cout << "  -> " << players[i].getName()
+                      << " final total = " << score << "\n";
+            if (score > bestScore) {
+                bestScore = score;
+                winners.clear();
+                winners.push_back(i);
+            }
+            else if (score == bestScore) {
+                winners.push_back(i);
+            }
+        } else {
+            std::cout << "  -> " << players[i].getName() << " is busted.\n";
+        }
+    }
+
+    if (winners.empty()) {
+        messageText.setString("Everyone busted. No winners!");
+        std::cout << "  -> Everyone busted!\n";
+    } else {
+        std::string winnerNames;
+        for (auto w : winners) {
+            winnerNames += players[w].getName() + " ";
+        }
+        messageText.setString("Winner(s): " + winnerNames + " with " + std::to_string(bestScore));
+        std::cout << "  -> Winner(s): " << winnerNames << "with " << bestScore << "\n";
+    }
+    std::cout << "[GameState::concludeRound] End.\n";
+}
+
+void GameState::updateLabels() {
+    if (currentPlayerIndex < (int)players.size()) {
+        Player& current = players[currentPlayerIndex];
+        int total = current.calculateHandTotal();
+        roundInfoText.setString(current.getName() + " - Total: " + std::to_string(total));
+        
+        if (current.hasWildcards()) {
+            std::string wText = "Wildcards: ";
+            for (auto& w : current.getWildcards()) {
+                wText += "[" + w->getName() + "] ";
+            }
+            wildcardInfoText.setString(wText);
+        } else {
+            wildcardInfoText.setString("No wildcards available.");
+        }
+    }
+    else {
+        roundInfoText.setString("All players done.");
+        wildcardInfoText.setString("");
     }
 }
 
 void GameState::render() {
-    window.clear(sf::Color(0, 100, 0));  // Dark green background
+    window.clear(sf::Color(30, 30, 30));
 
-    // Draw player info
-    for (const auto& text : playerMoneyTexts) {
-        window.draw(text);
-    }
-    for (const auto& text : playerBetTexts) {
-        window.draw(text);
-    }
+    hitButton.draw(window);
+    standButton.draw(window);
+    wildcardButton.draw(window);
 
-    if (bettingPhase) {
-        // Draw betting buttons
-        buttons[2].draw(window);  // Bet button
-        buttons[3].draw(window);  // Deal button
-    } else {
-        // Draw all players' cards
-        for (size_t i = 0; i < players.size(); ++i) {
-            const auto& playerHand = players[i].getHand();
-            for (const auto& card : playerHand) {
-                card->draw(window, font);
-            }
-        }
-        
-        // Draw dealer's cards
-        const auto& dealerHand = dealer.getHand();
-        for (size_t i = 0; i < dealerHand.size(); ++i) {
-            dealerHand[i]->draw(window, font, dealerRevealed || i == 0);
-        }
-
-        // Draw game buttons
-        buttons[0].draw(window);  // Hit button
-        buttons[1].draw(window);  // Stand button
-
-        // Draw scores
-        for (const auto& text : playerScoreTexts) {
-            window.draw(text);
-        }
-        window.draw(dealerScoreText);
-    }
-
-    // Draw message and current player indicator
-    if (gameOver || bettingPhase) {
-        window.draw(messageText);
-    }
-    if (!gameOver) {
-        window.draw(currentPlayerText);
-    }
+    window.draw(roundInfoText);
+    window.draw(wildcardInfoText);
+    window.draw(messageText);
 
     window.display();
 }

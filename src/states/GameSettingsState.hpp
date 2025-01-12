@@ -3,7 +3,10 @@
 #include "../ui/Button.hpp"
 #include <vector>
 #include <string>
+#include <iostream>         // for logging
+#include <SFML/Graphics.hpp>
 
+// Simple struct that holds user-chosen game settings
 struct GameSettings {
     int numPlayers;
     float startingMoney;
@@ -27,37 +30,36 @@ public:
     void handleInput() override;
     void update() override;
     void render() override;
+
     const GameSettings& getSettings() const { return settings; }
 
 private:
-    // Initialization methods
     void initializeButtons();
     void initializeDecorations();
     bool loadResources();
-    
-    // Helper methods
+
     sf::Vector2f getMousePosition() const;
     void updateSettingsText();
     void adjustSetting(int settingIndex, bool increase);
 
     // Fonts
-    sf::Font titleFont;     // Casino-style font for title
-    sf::Font buttonFont;    // Font for buttons
-    sf::Font standardFont;  // Standard font for settings text
+    sf::Font titleFont;     
+    sf::Font buttonFont;    
+    sf::Font standardFont;  
     
-    // Slider elements for wildcards
+    // Slider elements
     sf::RectangleShape sliderTrack;
     sf::RectangleShape sliderHandle;
     bool isDraggingSlider;
-    
-    // Visual elements
+
+    // Visual
     sf::Text titleText;
     std::vector<Button> buttons;
     std::vector<sf::Text> settingTexts;
-    std::vector<CircleData> decorativeCircles;  // Animated background elements
-    std::vector<sf::RectangleShape> minusSymbols;      // Shapes for minus buttons
-    std::vector<sf::RectangleShape> plusVerticalSymbols;   // Vertical lines for plus buttons
-    std::vector<sf::RectangleShape> plusHorizontalSymbols; // Horizontal lines for plus buttons
+    std::vector<CircleData> decorativeCircles;
+    std::vector<sf::RectangleShape> minusSymbols;
+    std::vector<sf::RectangleShape> plusVerticalSymbols;
+    std::vector<sf::RectangleShape> plusHorizontalSymbols;
     
     // Game settings
     GameSettings settings;

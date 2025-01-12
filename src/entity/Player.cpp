@@ -1,10 +1,11 @@
 #include "Player.hpp"
 #include <stdexcept>
+#include <numeric> // For accumulate if desired
 
 Player::Player(const std::string& name, float initialMoney)
     : name(name)
     , money(initialMoney)
-    , currentBet(0.0f)
+    , currentBet(0.f)
 {
 }
 
@@ -14,13 +15,13 @@ void Player::addCard(std::shared_ptr<Card> card) {
 
 void Player::clearHand() {
     hand.clear();
-    currentBet = 0.0f;
+    currentBet = 0.f;
 }
 
 int Player::calculateHandTotal() const {
     int total = 0;
-    for (const auto& card : hand) {
-        total += card->getValue();
+    for (auto& c : hand) {
+        total += c->getValue();
     }
     return total;
 }
@@ -49,7 +50,11 @@ float Player::getCurrentBet() const {
 }
 
 bool Player::canBet(float amount) const {
-    return amount <= money;
+    return (amount <= money);
+}
+
+void Player::setCurrentBet(float newBet) {
+    currentBet = newBet;
 }
 
 const std::string& Player::getName() const {
@@ -57,7 +62,7 @@ const std::string& Player::getName() const {
 }
 
 bool Player::isBusted() const {
-    return calculateHandTotal() > 21;
+    return (calculateHandTotal() > 21);
 }
 
 void Player::addWildcard(std::shared_ptr<Wildcard> card) {
@@ -70,8 +75,8 @@ bool Player::useWildcard(size_t index, std::vector<Player>& allPlayers) {
     if (index >= wildcards.size()) {
         return false;
     }
-    
     wildcards[index]->use(*this, allPlayers);
+    // Remove the wildcard once used
     wildcards.erase(wildcards.begin() + index);
     return true;
 }
