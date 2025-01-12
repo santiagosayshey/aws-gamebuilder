@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include "../entity/Wildcards/Tycoon.cpp"
+#include "../entity/Wildcards/ExtraBet.cpp"
+#include "../entity/Wildcards/Duplicate.cpp"
 
 GameState::GameState(sf::RenderWindow &window, const GameSettings &settings)
     : State(window), currentPlayerIndex(0), dealer("Dealer", 0.0f), playerTurn(true), gameOver(false), dealerRevealed(false), bettingPhase(true), minBet(settings.minBet), deck()
@@ -22,6 +25,11 @@ GameState::GameState(sf::RenderWindow &window, const GameSettings &settings)
     deck.shuffle();
     initializeButtons();
     updateMoneyText();
+
+    // Enable gameplay with wildcard
+    if (settings.wildcardEnabled) {
+        initializeWildcards();
+    }
 }
 
 bool GameState::loadResources()
@@ -138,13 +146,17 @@ sf::Vector2f GameState::getMousePosition() const
 
 void GameState::initializeWildcards(){
     wildcardDeck.clear();
+    std::cout << "Initializing wildcards..." << std::endl;
 
     // Add instances of all wildcards
-    wildcardDeck.push_back(std::make_shared<Duplicate>());
-    wildcardDeck.push_back(std::make_shared<ExtraBet>());
+    wildcardDeck.push_back(std::unique_ptr<Wildcard>(new Duplicate()));
+    std::cout << "Added Duplicate wildcard." << std::endl;
+    wildcardDeck.push_back(std::unique_ptr<Wildcard>(new ExtraBet()));
+    std::cout << "Added Extra Bet wildcard." << std::endl;
+    wildcardDeck.push_back(std::unique_ptr<Wildcard>(new Tycoon()));
+    std::cout << "Added Tycoon wildcard." << std::endl;
     //wildcardDeck.push_back(std::make_shared<Foresight>());
     //wildcardDeck.push_back(std::make_shared<InstantStand>());
-    wildcardDeck.push_back(std::make_shared<Tycoon>());
     //wildcardDeck.push_back(std::make_shared<BalanceShift>());
     //wildcardDeck.push_back(std::make_shared<SafeHit>());
 }
