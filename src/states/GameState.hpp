@@ -4,7 +4,7 @@
 #include "../entity/Player.hpp"
 #include "../entity/Card.hpp"
 #include "../entity/Deck.hpp"
-#include "../entity/Wildcards/Wildcards.hpp" // either Wildcard.hpp or Wildcards.hpp depending on whose version
+#include "../entity/wildcard/Wildcard.hpp" // either Wildcard.hpp or Wildcards.hpp depending on whose version
 #include "GameSettingsState.hpp"
 #include <vector>
 #include <memory>

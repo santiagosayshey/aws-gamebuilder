@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
-#include "../entity/Wildcards/Tycoon.cpp"
-#include "../entity/Wildcards/ExtraBet.cpp"
-#include "../entity/Wildcards/Duplicate.cpp"
+#include "../entity/wildcard/Tycoon.cpp"
+#include "../entity/wildcard/ExtraBet.cpp"
+#include "../entity/wildcard/Duplicate.cpp"
 
 GameState::GameState(sf::RenderWindow &window, const GameSettings &settings)
     : State(window), settings(settings), dealer("Dealer", 0.0f), playerTurn(true), gameOver(false), dealerRevealed(false), bettingPhase(true), minBet(settings.minBet), deck()
