@@ -21,10 +21,15 @@ void Player::clearHand() {
 int Player::calculateHandTotal() const {
     int total = 0;
     for (auto& c : hand) {
-        total += c->getValue();
+        int val = c->getValue(); 
+        if (val > 10) {
+            val = 10; // face cards become 10
+        }
+        total += val;
     }
     return total;
 }
+
 
 const std::vector<std::shared_ptr<Card>>& Player::getHand() const {
     return hand;
