@@ -7,7 +7,7 @@ class Foresight : public Wildcard
 {
 public:
     Foresight() = default;
-    Foresight() = default;
+    ~Foresight() = default;
 
     void use(Player &owner, std::vector<Player> &allPlayers) override
     {

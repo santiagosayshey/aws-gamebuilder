@@ -106,12 +106,11 @@ void Player::clearWildcards()
     wildcards.clear();
 }
 
-void Player::doubleBet()
+void Player::doubleBet(float amount)
 {
-    if (canBet(currentBet))
+    if (canBet(amount))
     {
-        money -= currentBet;
-        currentBet *= 2;
+        money -= amount;
     }
 }
 

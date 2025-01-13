@@ -203,7 +203,7 @@ void GameState::handleInput()
                 // Double down button
                 else if (buttons[2].isMouseOver(mousePos))
                 {
-                    updateMoneyText();
+                    currentPlayer.doubleBet(minBet);
                     auto newCard = std::make_shared<Card>(deck.draw());
                     float xOffset = 300.f + currentPlayer.getHand().size() * 85.f;
                     float yOffset = 400.f + currentPlayerIndex * 50.f;
@@ -212,9 +212,11 @@ void GameState::handleInput()
 
                     if (currentPlayer.isBusted())
                     {
+                        updateMoneyText();
                         handleLoss(currentPlayer);
                         nextPlayer();
                     }
+                    updateMoneyText();
                     nextPlayer();
                 }
             }

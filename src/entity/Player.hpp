@@ -2,6 +2,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <iostream>
 #include "Card.hpp"
 #include "./entity/wildcard/Wildcard.hpp"
 
@@ -19,7 +20,7 @@ public:
 
     // Money management
     void placeBet(float amount);
-    void doubleBet();
+    void doubleBet(float amount);
     void addWinnings(float amount);
     float getMoney() const;
     float getCurrentBet() const;
