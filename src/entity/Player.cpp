@@ -1,8 +1,12 @@
 #include "Player.hpp"
 #include <stdexcept>
+#include <numeric> // For accumulate if desired
 
-Player::Player(const std::string &name, float initialMoney)
-    : name(name), money(initialMoney), currentBet(0.0f)
+
+Player::Player(const std::string& name, float initialMoney)
+    : name(name)
+    , money(initialMoney)
+    , currentBet(0.f)
 {
 }
 
@@ -14,21 +18,42 @@ void Player::addCard(std::shared_ptr<Card> card)
 void Player::clearHand()
 {
     hand.clear();
-    currentBet = 0.0f;
+    currentBet = 0.f;
 }
 
 int Player::calculateHandTotal() const
 {
     int total = 0;
-    for (const auto &card : hand)
-    {
-        total += card->getValue();
+    int numAces = 0;
+    
+    // First count aces and sum up non-ace cards
+    for (const auto& card : hand) {
+        int val = card->getValue();
+        
+        if (val == 1) {  // Ace
+            numAces++;
+        } else if (val > 10 && val < 14) {  // Face cards
+            total += 10;
+        } else {
+            total += val;
+        }
     }
+    
+    // Now handle aces optimally
+    for (int i = 0; i < numAces; i++) {
+        // If we can add 11 without busting, do it. Otherwise add 1
+        if (total + 11 <= 21) {
+            total += 11;
+        } else {
+            total += 1;
+        }
+    }
+    
     return total;
 }
 
-const std::vector<std::shared_ptr<Card>> &Player::getHand() const
-{
+
+const std::vector<std::shared_ptr<Card>>& Player::getHand() const {
     return hand;
 }
 
@@ -56,9 +81,13 @@ float Player::getCurrentBet() const
     return currentBet;
 }
 
-bool Player::canBet(float amount) const
-{
-    return amount <= money;
+
+bool Player::canBet(float amount) const {
+    return (amount <= money);
+}
+
+void Player::setCurrentBet(float newBet) {
+    currentBet = newBet;
 }
 
 const std::string &Player::getName() const
@@ -66,9 +95,9 @@ const std::string &Player::getName() const
     return name;
 }
 
-bool Player::isBusted() const
-{
-    return calculateHandTotal() > 21;
+
+bool Player::isBusted() const {
+    return (calculateHandTotal() > 21);
 }
 
 void Player::addWildcard(std::shared_ptr<Wildcard> card)
@@ -87,6 +116,7 @@ bool Player::useWildcard(size_t index, std::vector<Player> &allPlayers)
     }
 
     wildcards[index]->use(*this, allPlayers);
+    // Remove the wildcard once used
     wildcards.erase(wildcards.begin() + index);
     return true;
 }

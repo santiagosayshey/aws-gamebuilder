@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include "Card.hpp"
-#include "./entity/wildcard/Wildcard.hpp"
+#include "wildcard/Wildcard.hpp"
 
 class Player
 {
@@ -18,7 +18,6 @@ public:
     const std::vector<std::shared_ptr<Card>> &getHand() const;
     void setTotal();
 
-    // Money management
     void placeBet(float amount);
     void doubleBet(float amount);
     void addWinnings(float amount);
@@ -26,11 +25,12 @@ public:
     float getCurrentBet() const;
     bool canBet(float amount) const;
 
-    // Getters
-    const std::string &getName() const;
+    void setCurrentBet(float newBet); // For wildcards that alter bet
+
+    const std::string& getName() const;
     bool isBusted() const;
 
-    // Wildcard management - structure only, no implementation yet
+    // Wildcard management
     void addWildcard(std::shared_ptr<Wildcard> card);
     bool useWildcard(size_t index, std::vector<Player> &allPlayers);
     const std::vector<std::shared_ptr<Wildcard>> &getWildcards() const;

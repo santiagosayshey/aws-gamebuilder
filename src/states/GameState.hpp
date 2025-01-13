@@ -1,18 +1,19 @@
 #pragma once
+
 #include "State.hpp"
-#include "../ui/Button.hpp"
-#include "../entity/Player.hpp"
-#include "../entity/Card.hpp"
-#include "../entity/Deck.hpp"
 #include "GameSettingsState.hpp"
+#include "../core/Deck.hpp"
+#include "../core/WildcardDeck.hpp"
+#include "../entity/Player.hpp"
+#include "../ui/Button.hpp"
+#include <SFML/Graphics.hpp>
 #include <vector>
 #include <memory>
-#include <iostream>
 
 class GameState : public State
 {
 public:
-    GameState(sf::RenderWindow &window, const GameSettings &settings = GameSettings());
+    GameState(sf::RenderWindow& window, const GameSettings& settings);
 
     void handleInput() override;
     void update() override;
@@ -20,43 +21,36 @@ public:
     const Card &peekNextCard() const;
 
 private:
-    void initializeButtons();
-    bool loadResources();
+    void startNewRound();
     void dealInitialCards();
-    void dealerPlay();
-    void checkGameOver();
-    sf::Vector2f getMousePosition() const;
-    void resetGame();
-    void startNewBet();
-    void handleWin(Player &player);
-    void handleLoss(Player &player);
-    void handlePush(Player &player);
-    void updateMoneyText();
-    void nextPlayer(); // Move to next player's turn
-    size_t getCurrentPlayerIndex() const { return currentPlayerIndex; }
+    void dealWildcards();
+    void nextPlayer();
+    void concludeRound();
+    void updateLabels();
 
-    sf::Font font;
-    std::vector<Button> buttons;
-
-    std::vector<Player> players; // Vector of all players
-    size_t currentPlayerIndex;   // Current player's turn
-    Player dealer;
+    // Data
+    GameSettings settings;
     Deck deck;
+    WildcardDeck wildcardDeck;
+    std::vector<Player> players;
 
-    bool playerTurn;       // True if it's players' turns, false if dealer's turn
-    bool gameOver;         // True if round is over
-    bool dealerRevealed;   // True if dealer's cards are revealed
-    bool bettingPhase;     // True if in betting phase
-    bool canDoubleDown;    // True if player can double
-    bool wildcardsEnabled; // True if wildcards are enabled
+    float pot; 
+    int currentPlayerIndex;
+    bool roundInProgress;
+    bool roundConcluded;
+    bool waitingForReplay;
 
-    float minBet;
+    // Buttons
+    Button hitButton;
+    Button standButton;
+    Button wildcardButton;
+    Button addBetButton;
 
-    // Text elements for each player
-    std::vector<sf::Text> playerScoreTexts;
-    std::vector<sf::Text> playerMoneyTexts;
-    std::vector<sf::Text> playerBetTexts;
-    sf::Text dealerScoreText;
+    // Font & texts
+    sf::Font font;
+    sf::Text roundInfoText;
+    sf::Text wildcardInfoText;
     sf::Text messageText;
-    sf::Text currentPlayerText; // Shows which player's turn it is
+
+    sf::Text potText;
 };
