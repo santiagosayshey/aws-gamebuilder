@@ -31,6 +31,7 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     , currentPlayerIndex(0)
     , roundInProgress(false)
     , roundConcluded(false)
+    , waitingForReplay(false)  // <--- Initialize here
     // We'll fix the font afterwards
     , hitButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f, 50.f), "HIT", sf::Font())
     , standButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f, 50.f), "STAND", sf::Font())
@@ -128,6 +129,7 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
 void GameState::startNewRound() {
     std::cout << "[GameState::startNewRound] Clear + reset\n";
     roundConcluded = false;
+    waitingForReplay = false; // <--- no longer waiting for replay once we start a new round
 
     for (auto& p : players) {
         p.clearHand();
@@ -174,6 +176,13 @@ void GameState::handleInput() {
     while (window.pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
             window.close();
+        }
+        // --- NEW: If the round concluded, pressing 'R' replays. ---
+        else if (waitingForReplay && event.type == sf::Event::KeyPressed) {
+            if (event.key.code == sf::Keyboard::R) {
+                std::cout << "[GameState] 'R' pressed -> startNewRound()\n";
+                startNewRound();
+            }
         }
         else if (event.type == sf::Event::MouseButtonPressed) {
             if (event.mouseButton.button == sf::Mouse::Left) {
@@ -265,15 +274,19 @@ void GameState::concludeRound() {
         }
     }
     if (winners.empty()) {
-        messageText.setString("Everyone busted. No winners!");
+        messageText.setString("Everyone busted. No winners! Press R to replay.");
     } else {
         std::string names;
         for (auto w : winners) {
             names += players[w].getName() + " ";
         }
         messageText.setString("Winner(s): " + names
-                             + " with " + std::to_string(players[winners[0]].calculateHandTotal()));
+                             + " with " + std::to_string(players[winners[0]].calculateHandTotal())
+                             + ". Press R to replay!");
     }
+
+    // Let the user press R to replay
+    waitingForReplay = true;
 }
 
 void GameState::updateLabels() {

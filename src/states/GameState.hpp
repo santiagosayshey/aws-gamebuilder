@@ -1,7 +1,6 @@
 #pragma once
-
 #include "State.hpp"
-#include "GameSettingsState.hpp"  // for GameSettings
+#include "GameSettingsState.hpp"
 #include "../core/Deck.hpp"
 #include "../core/WildcardDeck.hpp"
 #include "../entity/Player.hpp"
@@ -35,14 +34,16 @@ private:
     bool roundInProgress;
     bool roundConcluded;
 
+    bool waitingForReplay;
+
     // Buttons
     Button hitButton;
     Button standButton;
     Button wildcardButton;
 
-    // Font & Text
+    // Font & text
     sf::Font font;
-    sf::Text roundInfoText;    
-    sf::Text wildcardInfoText; 
-    sf::Text messageText;      
+    sf::Text roundInfoText;
+    sf::Text wildcardInfoText;
+    sf::Text messageText;
 };
