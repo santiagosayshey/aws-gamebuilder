@@ -1,122 +1,92 @@
-#include "GameState.hpp"
+#include "states/GameState.hpp"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
 
-// We'll keep the same card geometry
-static const float CARD_WIDTH = 80.f;
-static const float CARD_HEIGHT = 120.f;
-
-// Helper to create a fancy card shape
-sf::RectangleShape createCardShape(const sf::Vector2f& position,
-                                   const sf::Color& topColor,
-                                   const sf::Color& bottomColor)
-{
-    sf::RectangleShape shape;
-    shape.setSize(sf::Vector2f(CARD_WIDTH, CARD_HEIGHT));
-    shape.setPosition(position);
-    shape.setOutlineThickness(2.f);
-    shape.setOutlineColor(sf::Color::Black);
-    // For simplicity, we just set a single fill color (topColor).
-    shape.setFillColor(topColor);
-
-    return shape;
-}
-
 GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     : State(window)
     , settings(settings)
+    , pot(0.f)
     , currentPlayerIndex(0)
     , roundInProgress(false)
     , roundConcluded(false)
     , waitingForReplay(false)
-    , pot(0.f)  // <--- Initialize pot to 0
-    // We'll fix the button fonts below
-    , hitButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f,50.f), "HIT", sf::Font())
-    , standButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f,50.f), "STAND", sf::Font())
-    , wildcardButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f,50.f), "WILDCARD", sf::Font())
-    , addBetButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f,50.f), "BET $10", sf::Font())  // <--- new
+    , hitButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "HIT", sf::Font())
+    , standButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "STAND", sf::Font())
+    , wildcardButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "WILDCARD", sf::Font())
+    , addBetButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "BET $10", sf::Font())
 {
-    std::cout << "[GameState::CTOR] Begin\n";
-    std::cout << "  -> Number of players: " << settings.numPlayers << "\n";
-
-    // Create players
-    players.reserve(settings.numPlayers);
-    for (int i = 0; i < settings.numPlayers; ++i) {
-        players.emplace_back("Player " + std::to_string(i+1), settings.startingMoney);
-        std::cout << "     Created " << players.back().getName() 
-                  << " with $" << settings.startingMoney << "\n";
-    }
-
-    // 1) Load a basic system font (e.g. "arial.ttf")
+    // Load font
     std::vector<std::string> systemFonts = {
         "arial.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "C:/Windows/Fonts/Arial.ttf"
     };
-    bool loaded = false;
-    for (auto& path : systemFonts) {
+    
+    bool fontLoaded = false;
+    for (const auto& path : systemFonts) {
         if (font.loadFromFile(path)) {
-            loaded = true;
-            std::cout << "[GameState] Loaded system font: " << path << "\n";
+            fontLoaded = true;
             break;
         }
     }
-    if (!loaded) {
-        std::cerr << "[GameState::CTOR] ERROR: Could not load a system font.\n";
+    if (!fontLoaded) {
+        std::cerr << "Failed to load any system font\n";
     }
 
-    // 2) Position the buttons along the bottom, spaced out horizontally
-    const float buttonY = window.getSize().y - 70.f; 
-    const float buttonSpacing = 200.f;
-    sf::Vector2f hitPos(50.f, buttonY);
-    sf::Vector2f standPos(hitPos.x + buttonSpacing, buttonY);
-    sf::Vector2f wildcardPos(standPos.x + buttonSpacing, buttonY);
-    sf::Vector2f betPos(wildcardPos.x + buttonSpacing, buttonY);  // <--- for the "BET $10" button
+    // Initialize players
+    players.reserve(settings.numPlayers);
+    for (int i = 0; i < settings.numPlayers; ++i) {
+        players.emplace_back("Player " + std::to_string(i+1), settings.startingMoney);
+    }
 
-    // Re-initialize the buttons with real font & new positions
+    // Position buttons along bottom
+    const float buttonY = window.getSize().y - 70.f;
+    const float buttonSpacing = 180.f;  // Increased spacing
+    const float totalWidth = (120.f * 2) + (180.f * 2) + (3 * buttonSpacing);  // Total width of all buttons
+    float startX = (window.getSize().x - totalWidth) / 2.f;  // Center point
+    float currentX = startX;
+
     hitButton = Button(
-        hitPos,
+        sf::Vector2f(currentX, buttonY),
         sf::Vector2f(120.f, 50.f),
         "HIT",
         font,
         sf::Color::White,
         sf::Color::Yellow
     );
+    currentX += 120.f + buttonSpacing;
+
     standButton = Button(
-        standPos,
+        sf::Vector2f(currentX, buttonY),
         sf::Vector2f(120.f, 50.f),
         "STAND",
         font,
         sf::Color::White,
         sf::Color::Yellow
     );
+    currentX += 120.f + buttonSpacing;
+
     wildcardButton = Button(
-        wildcardPos,
-        sf::Vector2f(120.f, 50.f),
+        sf::Vector2f(currentX, buttonY),
+        sf::Vector2f(180.f, 50.f),  // Wider button
         "WILDCARD",
         font,
         sf::Color::White,
         sf::Color::Yellow
     );
+    currentX += 180.f + buttonSpacing;
 
-    // New "BET $10" button
     addBetButton = Button(
-        betPos,
-        sf::Vector2f(120.f, 50.f),
+        sf::Vector2f(currentX, buttonY),
+        sf::Vector2f(180.f, 50.f),  // Wider button
         "BET $10",
         font,
         sf::Color::White,
         sf::Color::Yellow
     );
 
-    // Shuffle decks
-    deck.shuffle();
-    if (settings.wildcardEnabled) {
-        wildcardDeck.shuffle();
-    }
-
-    // Setup text objects
+    // Initialize text displays
     roundInfoText.setFont(font);
     roundInfoText.setCharacterSize(24);
     roundInfoText.setFillColor(sf::Color::White);
@@ -130,34 +100,33 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     messageText.setFont(font);
     messageText.setCharacterSize(26);
     messageText.setFillColor(sf::Color::Yellow);
-    messageText.setPosition(50.f, 140.f);
+    messageText.setPosition(50.f, 130.f);
 
-    // Add a potText to show the pot near the top-left as well
     potText.setFont(font);
     potText.setCharacterSize(24);
     potText.setFillColor(sf::Color::Magenta);
-    potText.setPosition(50.f, 180.f);
+    potText.setPosition(50.f, 170.f);
 
     startNewRound();
-    std::cout << "[GameState::CTOR] End\n";
 }
 
 void GameState::startNewRound() {
-    std::cout << "[GameState::startNewRound] Clear + reset\n";
     roundConcluded = false;
     waitingForReplay = false;
-    
-    // Reset pot to 0 each round
-    pot = 0.f;  
+    pot = 0.f;
 
+    // Reset all players
     for (auto& p : players) {
         p.clearHand();
         p.clearWildcards();
     }
 
+    // Reset and shuffle decks
     deck.reset();
+    deck.shuffle();
     if (settings.wildcardEnabled) {
         wildcardDeck.reset();
+        wildcardDeck.shuffle();
     }
 
     dealInitialCards();
@@ -179,14 +148,12 @@ void GameState::dealInitialCards() {
             p.addCard(std::make_shared<Card>(c));
         }
     }
-    std::cout << "[GameState::dealInitialCards] 2 cards each\n";
 }
 
 void GameState::dealWildcards() {
     for (auto& p : players) {
         auto w = wildcardDeck.draw();
         p.addWildcard(w);
-        std::cout << "  -> " << p.getName() << " got wildcard [" << w->getName() << "]\n";
     }
 }
 
@@ -205,45 +172,42 @@ void GameState::handleInput() {
             if (event.mouseButton.button == sf::Mouse::Left) {
                 sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
-                // HIT
-                if (hitButton.isMouseOver(mousePos) && roundInProgress && !roundConcluded) {
+                if (roundInProgress && !roundConcluded) {
                     Player& current = players[currentPlayerIndex];
-                    Card c = deck.draw();
-                    current.addCard(std::make_shared<Card>(c));
-                    if (current.isBusted()) {
-                        messageText.setString(current.getName() + " BUSTED!");
-                    }
-                    updateLabels();
-                }
-                // STAND
-                else if (standButton.isMouseOver(mousePos) && roundInProgress && !roundConcluded) {
-                    messageText.setString(players[currentPlayerIndex].getName() + " stands.");
-                    nextPlayer();
-                }
-                // WILDCARD
-                else if (wildcardButton.isMouseOver(mousePos) && roundInProgress && !roundConcluded) {
-                    Player& current = players[currentPlayerIndex];
-                    if (current.hasWildcards()) {
-                        if (current.useWildcard(0, players)) {
-                            messageText.setString(current.getName() + " used a wildcard!");
-                            updateLabels();
+
+                    if (hitButton.isMouseOver(mousePos)) {
+                        Card c = deck.draw();
+                        current.addCard(std::make_shared<Card>(c));
+                        if (current.isBusted()) {
+                            messageText.setString(current.getName() + " BUSTED!");
                         }
-                    } else {
-                        messageText.setString("No wildcards to use!");
+                        updateLabels();
                     }
-                }
-                // BET $10
-                else if (addBetButton.isMouseOver(mousePos) && roundInProgress && !roundConcluded) {
-                    Player& current = players[currentPlayerIndex];
-                    float betAmount = 10.f;
-                    if (current.canBet(betAmount)) {
-                        current.placeBet(betAmount); 
-                        pot += betAmount;
-                        messageText.setString(current.getName() + " bet $" + std::to_string((int)betAmount));
-                    } else {
-                        messageText.setString("Not enough funds to bet $10!");
+                    else if (standButton.isMouseOver(mousePos)) {
+                        messageText.setString(current.getName() + " stands.");
+                        nextPlayer();
                     }
-                    updateLabels();
+                    else if (wildcardButton.isMouseOver(mousePos)) {
+                        if (current.hasWildcards()) {
+                            if (current.useWildcard(0, players)) {
+                                messageText.setString(current.getName() + " used a wildcard!");
+                                updateLabels();
+                            }
+                        } else {
+                            messageText.setString("No wildcards available!");
+                        }
+                    }
+                    else if (addBetButton.isMouseOver(mousePos)) {
+                        float betAmount = 10.f;
+                        if (current.canBet(betAmount)) {
+                            current.placeBet(betAmount);
+                            pot += betAmount;
+                            messageText.setString(current.getName() + " bet $" + std::to_string((int)betAmount));
+                        } else {
+                            messageText.setString("Not enough funds to bet $10!");
+                        }
+                        updateLabels();
+                    }
                 }
             }
         }
@@ -265,11 +229,8 @@ void GameState::update() {
     if (current.isBusted() || total == 21) {
         nextPlayer();
     }
-    if (currentPlayerIndex >= (int)players.size()) {
-        concludeRound();
-    }
 
-    // Update buttons
+    // Update UI elements
     float dt = 1.f / 60.f;
     hitButton.update(dt);
     standButton.update(dt);
@@ -287,13 +248,14 @@ void GameState::nextPlayer() {
     }
 }
 
-// In concludeRound, pay out the pot to the winner(s)
 void GameState::concludeRound() {
     roundInProgress = false;
     roundConcluded = true;
 
     int bestScore = -1;
     std::vector<int> winners;
+    
+    // Find winners
     for (int i = 0; i < (int)players.size(); ++i) {
         if (!players[i].isBusted()) {
             int score = players[i].calculateHandTotal();
@@ -307,167 +269,194 @@ void GameState::concludeRound() {
             }
         }
     }
+
     if (winners.empty()) {
-        // Everyone busted
-        messageText.setString("Everyone busted. No winners! Pot lost. Press R to replay.");
-        // pot is effectively lost to the house
-        pot = 0.f;
+        messageText.setString("Everyone busted! Press R to replay.");
+        pot = 0.f;  // House takes the pot
     } else {
         std::string names;
+        float share = pot / winners.size();
+        
         for (auto w : winners) {
             names += players[w].getName() + " ";
-        }
-        // If there's multiple winners, they share the pot equally
-        float share = pot / winners.size();
-        for (auto w : winners) {
             players[w].addWinnings(share);
         }
 
-        messageText.setString("Winner(s): " + names
-                             + " with " + std::to_string(players[winners[0]].calculateHandTotal())
-                             + " and split $" + std::to_string((int)pot)
-                             + "! Press R to replay.");
-        pot = 0.f; // pot reset after payout
+        messageText.setString("Winner(s): " + names + 
+                            "with " + std::to_string(bestScore) + 
+                            " splitting $" + std::to_string((int)pot) + 
+                            "! Press R to replay.");
+        pot = 0.f;
     }
 
     waitingForReplay = true;
 }
 
 void GameState::updateLabels() {
-    // Show the pot amount
     potText.setString("Pot: $" + std::to_string((int)pot));
 
     if (currentPlayerIndex < (int)players.size()) {
         Player& current = players[currentPlayerIndex];
-        int total = current.calculateHandTotal();
-        roundInfoText.setString(current.getName() + " - Total: " + std::to_string(total));
+        roundInfoText.setString(current.getName() + " - Total: " + 
+                              std::to_string(current.calculateHandTotal()));
 
         if (current.hasWildcards()) {
             std::string wText = "Wildcards: ";
-            for (auto& w : current.getWildcards()) {
+            for (const auto& w : current.getWildcards()) {
                 wText += "[" + w->getName() + "] ";
             }
             wildcardInfoText.setString(wText);
         } else {
             wildcardInfoText.setString("No wildcards available.");
         }
-    }
-    else {
+    } else {
         roundInfoText.setString("All players done.");
         wildcardInfoText.setString("");
     }
 }
 
 void GameState::render() {
-    window.clear(sf::Color(20, 100, 20));  // deeper green
+    window.clear(sf::Color(0, 60, 0));  // Darker base green
 
-    // swirl background
-    float centerX = window.getSize().x / 2.f;
-    float centerY = window.getSize().y / 2.f;
-    for (int i = 0; i < 8; ++i) {
-        sf::CircleShape swirl(100.f + i * 30.f, 64);
-        swirl.setFillColor(sf::Color(0, 0, 0, 0));
-        swirl.setOutlineThickness(2.f);
-        swirl.setOutlineColor(sf::Color(0, 150 - i * 15, 0, 100));
-        swirl.setOrigin(swirl.getRadius(), swirl.getRadius());
-        swirl.setPosition(centerX, centerY);
-        swirl.rotate(i * 15.f);
-        window.draw(swirl);
+    // Draw decorative corner circles
+    const float centerX = window.getSize().x / 2.f;
+    const float centerY = window.getSize().y / 2.f;
+    static float time = 0.0f;
+    time += 1.f/60.f;  // Animation time
+
+    // Draw large decorative circles in corners
+    std::vector<sf::Vector2f> cornerPositions = {
+        {0, 0},                                  // Top-left
+        {window.getSize().x, 0},                 // Top-right
+        {0, window.getSize().y},                 // Bottom-left
+        {window.getSize().x, window.getSize().y} // Bottom-right
+    };
+
+    for (size_t i = 0; i < cornerPositions.size(); ++i) {
+        sf::CircleShape corner(200.f);
+        corner.setFillColor(sf::Color(0, 80, 0, 100));
+        float xOffset = std::sin(time * 0.8f + i * 0.5f) * 15.f;
+        float yOffset = std::cos(time * 1.2f + i * 0.5f) * 15.f;
+        corner.setPosition(cornerPositions[i].x - corner.getRadius() + xOffset, 
+                         cornerPositions[i].y - corner.getRadius() + yOffset);
+        window.draw(corner);
     }
 
-    // Buttons
-    hitButton.draw(window);
-    standButton.draw(window);
-    wildcardButton.draw(window);
-    addBetButton.draw(window); // new
+    // Draw table pattern
+    const int NUM_RINGS = 12;
+    for (int i = 0; i < NUM_RINGS; ++i) {
+        float radius = 80.f + i * 25.f;
+        float rotation = time * 20.f + i * 5.f;  // Animated rotation
+        
+        sf::CircleShape ring(radius, 64);
+        ring.setFillColor(sf::Color(0, 0, 0, 0));
+        ring.setOutlineThickness(2.f);
+        
+        // Alternate between gold and green rings
+        if (i % 2 == 0) {
+            ring.setOutlineColor(sf::Color(255, 215, 0, 40));  // Gold with low alpha
+        } else {
+            ring.setOutlineColor(sf::Color(0, 150 - i * 8, 0, 60));
+        }
+        
+        ring.setOrigin(radius, radius);
+        ring.setPosition(centerX, centerY);
+        ring.rotate(rotation);
+        window.draw(ring);
 
-    // Info texts
-    window.draw(roundInfoText);
-    window.draw(wildcardInfoText);
-    window.draw(messageText);
+        // Add inner pattern
+        sf::CircleShape innerPattern(radius * 0.8f, 8);  // Octagon shape
+        innerPattern.setFillColor(sf::Color(0, 0, 0, 0));
+        innerPattern.setOutlineThickness(1.f);
+        innerPattern.setOutlineColor(sf::Color(0, 130 - i * 8, 0, 40));
+        innerPattern.setOrigin(radius * 0.8f, radius * 0.8f);
+        innerPattern.setPosition(centerX, centerY);
+        innerPattern.rotate(-rotation * 0.5f);  // Counter-rotation
+        window.draw(innerPattern);
+    }
 
-    // Show pot text
-    window.draw(potText);
-
-    // Circular layout for players
-    float radius = 250.f; 
-    float angleStep = 360.f / players.size();
-
+    // Draw players in a circle
+    const float playerRadius = 250.f;
+    const float angleStep = 360.f / players.size();
+    
     for (size_t i = 0; i < players.size(); ++i) {
         Player& p = players[i];
-        float angleDeg = angleStep * i - 90; // start top
-        float angleRad = angleDeg * 3.14159f / 180.f;
-        float px = centerX + radius * std::cos(angleRad);
-        float py = centerY + radius * std::sin(angleRad);
+        float angle = (angleStep * i - 90.f) * 3.14159f / 180.f;
+        float px = centerX + playerRadius * std::cos(angle);
+        float py = centerY + playerRadius * std::sin(angle);
 
-        // highlight if current
-        if ((int)i == currentPlayerIndex) {
-            sf::CircleShape highlight(60.f);
-            highlight.setFillColor(sf::Color(255, 255, 0, 50));
-            highlight.setOrigin(highlight.getRadius(), highlight.getRadius());
-            highlight.setPosition(px, py);
-            window.draw(highlight);
-        }
-
-        // If busted, color name differently
+        // Draw player name
         sf::Text nameText;
         nameText.setFont(font);
         nameText.setCharacterSize(24);
-        if (p.isBusted()) {
-            nameText.setString(p.getName() + " (BUSTED!)");
-            nameText.setFillColor(sf::Color(255, 100, 100));
+        nameText.setString(p.getName() + (p.isBusted() ? " (BUSTED!)" : ""));
+        
+        if ((int)i == currentPlayerIndex && !p.isBusted()) {
+            float intensity = (std::sin(time * 4.0f) * 0.3f + 0.7f) * 255;  // Pulsing effect
+            nameText.setFillColor(sf::Color(255, 255, 0, (sf::Uint8)intensity));  // Yellow pulsing
         } else {
-            nameText.setString(p.getName());
-            nameText.setFillColor(sf::Color::White);
+            nameText.setFillColor(p.isBusted() ? sf::Color::Red : sf::Color::White);
         }
-        sf::FloatRect nb = nameText.getLocalBounds();
-        nameText.setOrigin(nb.width/2.f, nb.height);
-        nameText.setPosition(px, py - 70.f);
+        
+        sf::FloatRect bounds = nameText.getLocalBounds();
+        nameText.setOrigin(bounds.width/2.f, bounds.height);
+        nameText.setPosition(px, py - 80.f);
         window.draw(nameText);
 
-        // Draw their cards
-        float cardOffsetX = px - (CARD_WIDTH + 10.f)*(p.getHand().size()/2.f);
-        float cardOffsetY = py - CARD_HEIGHT/2.f;
-        for (size_t cIndex = 0; cIndex < p.getHand().size(); ++cIndex) {
-            auto& card = p.getHand()[cIndex];
-            float cx = cardOffsetX + cIndex*(CARD_WIDTH + 10.f);
-            float cy = cardOffsetY;
-
-            sf::RectangleShape cardShape = createCardShape(
-                sf::Vector2f(cx, cy),
-                sf::Color(255, 255, 255),
-                sf::Color(200, 200, 200)
-            );
-            window.draw(cardShape);
-
-            sf::Text cardText;
-            cardText.setFont(font);
-            cardText.setCharacterSize(20);
-            cardText.setFillColor(sf::Color::Black);
-            cardText.setString(card->toString());
-            sf::FloatRect cb = cardText.getLocalBounds();
-            cardText.setOrigin(cb.width/2.f, cb.height/2.f);
-            cardText.setPosition(cx + CARD_WIDTH/2.f, cy + CARD_HEIGHT/2.f);
-            window.draw(cardText);
+        // Draw player's cards
+        const float cardWidth = 75.f;
+        const float cardHeight = 100.f;
+        const float cardSpacing = 30.f;
+        
+        const auto& hand = p.getHand();
+        float startX = px - ((cardWidth + cardSpacing) * (hand.size() - 1)) / 2.f;
+        
+        for (size_t j = 0; j < hand.size(); ++j) {
+            float cardX = startX + j * (cardWidth + cardSpacing);
+            const auto& card = hand[j];
+            card->setPosition(sf::Vector2f(cardX, py - cardHeight/2.f));
+            card->draw(window, font);
         }
 
-        // If they have wildcards, show them below
+        // Draw wildcards if any
         if (p.hasWildcards()) {
-            sf::Text wcLabel;
-            wcLabel.setFont(font);
-            wcLabel.setCharacterSize(18);
-            wcLabel.setFillColor(sf::Color::Yellow);
-            std::string wcSummary;
-            for (auto& w : p.getWildcards()) {
-                wcSummary += w->getName() + " ";
+            sf::Text wcText;
+            wcText.setFont(font);
+            wcText.setCharacterSize(18);
+            wcText.setFillColor(sf::Color(255, 215, 0));  // Gold color for wildcards
+            
+            std::string wcString = "WC: ";
+            for (const auto& w : p.getWildcards()) {
+                wcString += w->getName() + " ";
             }
-            wcLabel.setString("WC: " + wcSummary);
-            sf::FloatRect wb = wcLabel.getLocalBounds();
-            wcLabel.setOrigin(wb.width/2.f, 0.f);
-            wcLabel.setPosition(px, py + 70.f);
-            window.draw(wcLabel);
+            
+            wcText.setString(wcString);
+            bounds = wcText.getLocalBounds();
+            wcText.setOrigin(bounds.width/2.f, 0.f);
+            wcText.setPosition(px, py + 70.f);
+            window.draw(wcText);
         }
     }
+
+    // Draw UI elements with subtle glow effects
+    hitButton.draw(window);
+    standButton.draw(window);
+    wildcardButton.draw(window);
+    addBetButton.draw(window);
+
+    // Draw info texts with drop shadows
+    auto drawTextWithShadow = [&](const sf::Text& text) {
+        sf::Text shadow = text;
+        shadow.setFillColor(sf::Color(0, 0, 0, 100));
+        shadow.setPosition(text.getPosition() + sf::Vector2f(2, 2));
+        window.draw(shadow);
+        window.draw(text);
+    };
+
+    drawTextWithShadow(roundInfoText);
+    drawTextWithShadow(wildcardInfoText);
+    drawTextWithShadow(messageText);
+    drawTextWithShadow(potText);
 
     window.display();
 }
