@@ -3,49 +3,41 @@
 #include <cmath>
 #include <algorithm>
 
-GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
-    : State(window)
-    , settings(settings)
-    , pot(0.f)
-    , currentPlayerIndex(0)
-    , roundInProgress(false)
-    , roundConcluded(false)
-    , waitingForReplay(false)
-    , hitButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "HIT", sf::Font())
-    , standButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "STAND", sf::Font())
-    , wildcardButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "WILDCARD", sf::Font())
-    , addBetButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "BET $10", sf::Font())
-    , deck()
+GameState::GameState(sf::RenderWindow &window, const GameSettings &settings)
+    : State(window), settings(settings), pot(0.f), currentPlayerIndex(0), roundInProgress(false), roundConcluded(false), waitingForReplay(false), hitButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "HIT", sf::Font()), standButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "STAND", sf::Font()), doubleDownButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "DOUBLE DOWN", sf::Font()), wildcardButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "WILDCARD", sf::Font()), addBetButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "BET $10", sf::Font())
 {
     // Load font
     std::vector<std::string> systemFonts = {
         "arial.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "C:/Windows/Fonts/Arial.ttf"
-    };
-    
+        "C:/Windows/Fonts/Arial.ttf"};
+
     bool fontLoaded = false;
-    for (const auto& path : systemFonts) {
-        if (font.loadFromFile(path)) {
+    for (const auto &path : systemFonts)
+    {
+        if (font.loadFromFile(path))
+        {
             fontLoaded = true;
             break;
         }
     }
-    if (!fontLoaded) {
+    if (!fontLoaded)
+    {
         std::cerr << "Failed to load any system font\n";
     }
 
     // Initialize players
     players.reserve(settings.numPlayers);
-    for (int i = 0; i < settings.numPlayers; ++i) {
-        players.emplace_back("Player " + std::to_string(i+1), settings.startingMoney);
+    for (int i = 0; i < settings.numPlayers; ++i)
+    {
+        players.emplace_back("Player " + std::to_string(i + 1), settings.startingMoney);
     }
 
     // Position buttons along bottom
     const float buttonY = window.getSize().y - 70.f;
-    const float buttonSpacing = 180.f;  // Increased spacing
-    const float totalWidth = (120.f * 2) + (180.f * 2) + (3 * buttonSpacing);  // Total width of all buttons
-    float startX = (window.getSize().x - totalWidth) / 2.f;  // Center point
+    const float buttonSpacing = 180.f;                                        // Increased spacing
+    const float totalWidth = (120.f * 2) + (180.f * 2) + (3 * buttonSpacing); // Total width of all buttons
+    float startX = (window.getSize().x - totalWidth) / 2.f;                   // Center point
     float currentX = startX;
 
     hitButton = Button(
@@ -54,8 +46,7 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
         "HIT",
         font,
         sf::Color::White,
-        sf::Color::Yellow
-    );
+        sf::Color::Yellow);
     currentX += 120.f + buttonSpacing;
 
     standButton = Button(
@@ -64,28 +55,25 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
         "STAND",
         font,
         sf::Color::White,
-        sf::Color::Yellow
-    );
+        sf::Color::Yellow);
     currentX += 120.f + buttonSpacing;
 
     wildcardButton = Button(
         sf::Vector2f(currentX, buttonY),
-        sf::Vector2f(180.f, 50.f),  // Wider button
+        sf::Vector2f(180.f, 50.f), // Wider button
         "WILDCARD",
         font,
         sf::Color::White,
-        sf::Color::Yellow
-    );
+        sf::Color::Yellow);
     currentX += 180.f + buttonSpacing;
 
     addBetButton = Button(
         sf::Vector2f(currentX, buttonY),
-        sf::Vector2f(180.f, 50.f),  // Wider button
+        sf::Vector2f(180.f, 50.f), // Wider button
         "BET $10",
         font,
         sf::Color::White,
-        sf::Color::Yellow
-    );
+        sf::Color::Yellow);
 
     // Initialize text displays
     roundInfoText.setFont(font);
@@ -111,13 +99,15 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     startNewRound();
 }
 
-void GameState::startNewRound() {
+void GameState::startNewRound()
+{
     roundConcluded = false;
     waitingForReplay = false;
     pot = 0.f;
 
     // Reset all players
-    for (auto& p : players) {
+    for (auto &p : players)
+    {
         p.clearHand();
         p.clearWildcards();
     }
@@ -125,13 +115,15 @@ void GameState::startNewRound() {
     // Reset and shuffle decks
     deck.reset();
     deck.shuffle();
-    if (settings.wildcardEnabled) {
+    if (settings.wildcardEnabled)
+    {
         wildcardDeck.reset();
         wildcardDeck.shuffle();
     }
 
     dealInitialCards();
-    if (settings.wildcardEnabled) {
+    if (settings.wildcardEnabled)
+    {
         dealWildcards();
     }
 
@@ -142,17 +134,22 @@ void GameState::startNewRound() {
     updateLabels();
 }
 
-void GameState::dealInitialCards() {
-    for (int i = 0; i < 2; ++i) {
-        for (auto& p : players) {
+void GameState::dealInitialCards()
+{
+    for (int i = 0; i < 2; ++i)
+    {
+        for (auto &p : players)
+        {
             Card c = deck.draw();
             p.addCard(std::make_shared<Card>(c));
         }
     }
 }
 
-void GameState::dealWildcards() {
-    for (auto& p : players) {
+void GameState::dealWildcards()
+{
+    for (auto &p : players)
+    {
         auto w = wildcardDeck.draw();
         p.addWildcard(w);
     }
@@ -167,47 +164,64 @@ void GameState::handleInput()
         {
             window.close();
         }
-        else if (waitingForReplay && event.type == sf::Event::KeyPressed) {
-            if (event.key.code == sf::Keyboard::R) {
+        else if (waitingForReplay && event.type == sf::Event::KeyPressed)
+        {
+            if (event.key.code == sf::Keyboard::R)
+            {
                 startNewRound();
             }
         }
-        else if (event.type == sf::Event::MouseButtonPressed) {
-            if (event.mouseButton.button == sf::Mouse::Left) {
+        else if (event.type == sf::Event::MouseButtonPressed)
+        {
+            if (event.mouseButton.button == sf::Mouse::Left)
+            {
                 sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
-                if (roundInProgress && !roundConcluded) {
-                    Player& current = players[currentPlayerIndex];
+                if (roundInProgress && !roundConcluded)
+                {
+                    Player &current = players[currentPlayerIndex];
 
-                    if (hitButton.isMouseOver(mousePos)) {
+                    if (hitButton.isMouseOver(mousePos))
+                    {
                         Card c = deck.draw();
                         current.addCard(std::make_shared<Card>(c));
-                        if (current.isBusted()) {
+                        if (current.isBusted())
+                        {
                             messageText.setString(current.getName() + " BUSTED!");
                         }
                         updateLabels();
                     }
-                    else if (standButton.isMouseOver(mousePos)) {
+                    else if (standButton.isMouseOver(mousePos))
+                    {
                         messageText.setString(current.getName() + " stands.");
                         nextPlayer();
                     }
-                    else if (wildcardButton.isMouseOver(mousePos)) {
-                        if (current.hasWildcards()) {
-                            if (current.useWildcard(0, players)) {
+                    else if (wildcardButton.isMouseOver(mousePos))
+                    {
+                        if (current.hasWildcards())
+                        {
+                            if (current.useWildcard(0, players))
+                            {
                                 messageText.setString(current.getName() + " used a wildcard!");
                                 updateLabels();
                             }
-                        } else {
+                        }
+                        else
+                        {
                             messageText.setString("No wildcards available!");
                         }
                     }
-                    else if (addBetButton.isMouseOver(mousePos)) {
+                    else if (addBetButton.isMouseOver(mousePos))
+                    {
                         float betAmount = 10.f;
-                        if (current.canBet(betAmount)) {
+                        if (current.canBet(betAmount))
+                        {
                             current.placeBet(betAmount);
                             pot += betAmount;
                             messageText.setString(current.getName() + " bet $" + std::to_string((int)betAmount));
-                        } else {
+                        }
+                        else
+                        {
                             messageText.setString("Not enough funds to bet $10!");
                         }
                         updateLabels();
@@ -215,7 +229,8 @@ void GameState::handleInput()
                 }
             }
         }
-        else if (event.type == sf::Event::MouseMoved) {
+        else if (event.type == sf::Event::MouseMoved)
+        {
             sf::Vector2f mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window));
             hitButton.setHighlight(hitButton.isMouseOver(mousePos));
             standButton.setHighlight(standButton.isMouseOver(mousePos));
@@ -225,12 +240,15 @@ void GameState::handleInput()
     }
 }
 
-void GameState::update() {
-    if (!roundInProgress || roundConcluded) return;
+void GameState::update()
+{
+    if (!roundInProgress || roundConcluded)
+        return;
 
-    Player& current = players[currentPlayerIndex];
+    Player &current = players[currentPlayerIndex];
     int total = current.calculateHandTotal();
-    if (current.isBusted() || total == 21) {
+    if (current.isBusted() || total == 21)
+    {
         nextPlayer();
     }
 
@@ -242,93 +260,113 @@ void GameState::update() {
     addBetButton.update(dt);
 }
 
-
-void GameState::nextPlayer() {
+void GameState::nextPlayer()
+{
     currentPlayerIndex++;
-    if (currentPlayerIndex >= (int)players.size()) {
+    if (currentPlayerIndex >= (int)players.size())
+    {
         concludeRound();
-    } else {
+    }
+    else
+    {
         messageText.setString("");
         updateLabels();
     }
 }
 
-void GameState::concludeRound() {
+void GameState::concludeRound()
+{
     roundInProgress = false;
     roundConcluded = true;
 
     int bestScore = -1;
     std::vector<int> winners;
-    
+
     // Find winners
-    for (int i = 0; i < (int)players.size(); ++i) {
-        if (!players[i].isBusted()) {
+    for (int i = 0; i < (int)players.size(); ++i)
+    {
+        if (!players[i].isBusted())
+        {
             int score = players[i].calculateHandTotal();
-            if (score > bestScore) {
+            if (score > bestScore)
+            {
                 bestScore = score;
                 winners.clear();
                 winners.push_back(i);
             }
-            else if (score == bestScore) {
+            else if (score == bestScore)
+            {
                 winners.push_back(i);
             }
         }
     }
 
-    if (winners.empty()) {
+    if (winners.empty())
+    {
         messageText.setString("Everyone busted! Press R to replay.");
-        pot = 0.f;  // House takes the pot
-    } else {
+        pot = 0.f; // House takes the pot
+    }
+    else
+    {
         std::string names;
         float share = pot / winners.size();
-        
-        for (auto w : winners) {
+
+        for (auto w : winners)
+        {
             names += players[w].getName() + " ";
             players[w].addWinnings(share);
         }
 
-        messageText.setString("Winner(s): " + names + 
-                            "with " + std::to_string(bestScore) + 
-                            " splitting $" + std::to_string((int)pot) + 
-                            "! Press R to replay.");
+        messageText.setString("Winner(s): " + names +
+                              "with " + std::to_string(bestScore) +
+                              " splitting $" + std::to_string((int)pot) +
+                              "! Press R to replay.");
         pot = 0.f;
     }
 
     waitingForReplay = true;
 }
 
-void GameState::updateLabels() {
+void GameState::updateLabels()
+{
     potText.setString("Pot: $" + std::to_string((int)pot));
 
-    if (currentPlayerIndex < (int)players.size()) {
-        Player& current = players[currentPlayerIndex];
-        roundInfoText.setString(current.getName() + " - Total: " + 
-                              std::to_string(current.calculateHandTotal()));
+    if (currentPlayerIndex < (int)players.size())
+    {
+        Player &current = players[currentPlayerIndex];
+        roundInfoText.setString(current.getName() + " - Total: " +
+                                std::to_string(current.calculateHandTotal()));
 
-        if (current.hasWildcards()) {
+        if (current.hasWildcards())
+        {
             std::string wText = "Wildcards: ";
-            for (const auto& w : current.getWildcards()) {
+            for (const auto &w : current.getWildcards())
+            {
                 wText += "[" + w->getName() + "] ";
             }
             wildcardInfoText.setString(wText);
-        } else {
+        }
+        else
+        {
             wildcardInfoText.setString("No wildcards available.");
         }
-    } else {
+    }
+    else
+    {
         roundInfoText.setString("All players done.");
         wildcardInfoText.setString("");
     }
 }
 
-
-void GameState::render() {
-    window.clear(sf::Color(0, 60, 0));  // Darker base green
+void GameState::render()
+{
+    window.clear(sf::Color(0, 60, 0)); // Darker base green
 
     // Draw decorative corner circles
     const float centerX = window.getSize().x / 2.f;
     const float centerY = window.getSize().y / 2.f;
     static float time = 0.0f;
-    time += 1.f/60.f;  // Animation time
+    time += 1.f / 60.f; // Animation time
 
     // Draw large decorative circles in corners
     std::vector<sf::Vector2f> cornerPositions = {
@@ -338,55 +376,61 @@ void GameState::render() {
         {window.getSize().x, window.getSize().y} // Bottom-right
     };
 
-    for (size_t i = 0; i < cornerPositions.size(); ++i) {
+    for (size_t i = 0; i < cornerPositions.size(); ++i)
+    {
         sf::CircleShape corner(200.f);
         corner.setFillColor(sf::Color(0, 80, 0, 100));
         float xOffset = std::sin(time * 0.8f + i * 0.5f) * 15.f;
         float yOffset = std::cos(time * 1.2f + i * 0.5f) * 15.f;
-        corner.setPosition(cornerPositions[i].x - corner.getRadius() + xOffset, 
-                         cornerPositions[i].y - corner.getRadius() + yOffset);
+        corner.setPosition(cornerPositions[i].x - corner.getRadius() + xOffset,
+                           cornerPositions[i].y - corner.getRadius() + yOffset);
         window.draw(corner);
     }
 
     // Draw table pattern
     const int NUM_RINGS = 12;
-    for (int i = 0; i < NUM_RINGS; ++i) {
+    for (int i = 0; i < NUM_RINGS; ++i)
+    {
         float radius = 80.f + i * 25.f;
-        float rotation = time * 20.f + i * 5.f;  // Animated rotation
-        
+        float rotation = time * 20.f + i * 5.f; // Animated rotation
+
         sf::CircleShape ring(radius, 64);
         ring.setFillColor(sf::Color(0, 0, 0, 0));
         ring.setOutlineThickness(2.f);
-        
+
         // Alternate between gold and green rings
-        if (i % 2 == 0) {
-            ring.setOutlineColor(sf::Color(255, 215, 0, 40));  // Gold with low alpha
-        } else {
+        if (i % 2 == 0)
+        {
+            ring.setOutlineColor(sf::Color(255, 215, 0, 40)); // Gold with low alpha
+        }
+        else
+        {
             ring.setOutlineColor(sf::Color(0, 150 - i * 8, 0, 60));
         }
-        
+
         ring.setOrigin(radius, radius);
         ring.setPosition(centerX, centerY);
         ring.rotate(rotation);
         window.draw(ring);
 
         // Add inner pattern
-        sf::CircleShape innerPattern(radius * 0.8f, 8);  // Octagon shape
+        sf::CircleShape innerPattern(radius * 0.8f, 8); // Octagon shape
         innerPattern.setFillColor(sf::Color(0, 0, 0, 0));
         innerPattern.setOutlineThickness(1.f);
         innerPattern.setOutlineColor(sf::Color(0, 130 - i * 8, 0, 40));
         innerPattern.setOrigin(radius * 0.8f, radius * 0.8f);
         innerPattern.setPosition(centerX, centerY);
-        innerPattern.rotate(-rotation * 0.5f);  // Counter-rotation
+        innerPattern.rotate(-rotation * 0.5f); // Counter-rotation
         window.draw(innerPattern);
     }
 
     // Draw players in a circle
     const float playerRadius = 250.f;
     const float angleStep = 360.f / players.size();
-    
-    for (size_t i = 0; i < players.size(); ++i) {
-        Player& p = players[i];
+
+    for (size_t i = 0; i < players.size(); ++i)
+    {
+        Player &p = players[i];
         float angle = (angleStep * i - 90.f) * 3.14159f / 180.f;
         float px = centerX + playerRadius * std::cos(angle);
         float py = centerY + playerRadius * std::sin(angle);
@@ -396,16 +440,19 @@ void GameState::render() {
         nameText.setFont(font);
         nameText.setCharacterSize(24);
         nameText.setString(p.getName() + (p.isBusted() ? " (BUSTED!)" : ""));
-        
-        if ((int)i == currentPlayerIndex && !p.isBusted()) {
-            float intensity = (std::sin(time * 4.0f) * 0.3f + 0.7f) * 255;  // Pulsing effect
-            nameText.setFillColor(sf::Color(255, 255, 0, (sf::Uint8)intensity));  // Yellow pulsing
-        } else {
+
+        if ((int)i == currentPlayerIndex && !p.isBusted())
+        {
+            float intensity = (std::sin(time * 4.0f) * 0.3f + 0.7f) * 255;       // Pulsing effect
+            nameText.setFillColor(sf::Color(255, 255, 0, (sf::Uint8)intensity)); // Yellow pulsing
+        }
+        else
+        {
             nameText.setFillColor(p.isBusted() ? sf::Color::Red : sf::Color::White);
         }
-        
+
         sf::FloatRect bounds = nameText.getLocalBounds();
-        nameText.setOrigin(bounds.width/2.f, bounds.height);
+        nameText.setOrigin(bounds.width / 2.f, bounds.height);
         nameText.setPosition(px, py - 80.f);
         window.draw(nameText);
 
@@ -413,32 +460,35 @@ void GameState::render() {
         const float cardWidth = 75.f;
         const float cardHeight = 100.f;
         const float cardSpacing = 30.f;
-        
-        const auto& hand = p.getHand();
+
+        const auto &hand = p.getHand();
         float startX = px - ((cardWidth + cardSpacing) * (hand.size() - 1)) / 2.f;
-        
-        for (size_t j = 0; j < hand.size(); ++j) {
+
+        for (size_t j = 0; j < hand.size(); ++j)
+        {
             float cardX = startX + j * (cardWidth + cardSpacing);
-            const auto& card = hand[j];
-            card->setPosition(sf::Vector2f(cardX, py - cardHeight/2.f));
+            const auto &card = hand[j];
+            card->setPosition(sf::Vector2f(cardX, py - cardHeight / 2.f));
             card->draw(window, font);
         }
 
         // Draw wildcards if any
-        if (p.hasWildcards()) {
+        if (p.hasWildcards())
+        {
             sf::Text wcText;
             wcText.setFont(font);
             wcText.setCharacterSize(18);
-            wcText.setFillColor(sf::Color(255, 215, 0));  // Gold color for wildcards
-            
+            wcText.setFillColor(sf::Color(255, 215, 0)); // Gold color for wildcards
+
             std::string wcString = "WC: ";
-            for (const auto& w : p.getWildcards()) {
+            for (const auto &w : p.getWildcards())
+            {
                 wcString += w->getName() + " ";
             }
-            
+
             wcText.setString(wcString);
             bounds = wcText.getLocalBounds();
-            wcText.setOrigin(bounds.width/2.f, 0.f);
+            wcText.setOrigin(bounds.width / 2.f, 0.f);
             wcText.setPosition(px, py + 70.f);
             window.draw(wcText);
         }
@@ -451,7 +501,8 @@ void GameState::render() {
     addBetButton.draw(window);
 
     // Draw info texts with drop shadows
-    auto drawTextWithShadow = [&](const sf::Text& text) {
+    auto drawTextWithShadow = [&](const sf::Text &text)
+    {
         sf::Text shadow = text;
         shadow.setFillColor(sf::Color(0, 0, 0, 100));
         shadow.setPosition(text.getPosition() + sf::Vector2f(2, 2));

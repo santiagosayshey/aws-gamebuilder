@@ -2,11 +2,8 @@
 #include <stdexcept>
 #include <numeric> // For accumulate if desired
 
-
-Player::Player(const std::string& name, float initialMoney)
-    : name(name)
-    , money(initialMoney)
-    , currentBet(0.f)
+Player::Player(const std::string &name, float initialMoney)
+    : name(name), money(initialMoney), currentBet(0.f)
 {
 }
 
@@ -25,35 +22,45 @@ int Player::calculateHandTotal() const
 {
     int total = 0;
     int numAces = 0;
-    
+
     // First count aces and sum up non-ace cards
-    for (const auto& card : hand) {
+    for (const auto &card : hand)
+    {
         int val = card->getValue();
-        
-        if (val == 1) {  // Ace
+
+        if (val == 1)
+        { // Ace
             numAces++;
-        } else if (val > 10 && val < 14) {  // Face cards
+        }
+        else if (val > 10 && val < 14)
+        { // Face cards
             total += 10;
-        } else {
+        }
+        else
+        {
             total += val;
         }
     }
-    
+
     // Now handle aces optimally
-    for (int i = 0; i < numAces; i++) {
+    for (int i = 0; i < numAces; i++)
+    {
         // If we can add 11 without busting, do it. Otherwise add 1
-        if (total + 11 <= 21) {
+        if (total + 11 <= 21)
+        {
             total += 11;
-        } else {
+        }
+        else
+        {
             total += 1;
         }
     }
-    
+
     return total;
 }
 
-
-const std::vector<std::shared_ptr<Card>>& Player::getHand() const {
+const std::vector<std::shared_ptr<Card>> &Player::getHand() const
+{
     return hand;
 }
 
@@ -81,12 +88,13 @@ float Player::getCurrentBet() const
     return currentBet;
 }
 
-
-bool Player::canBet(float amount) const {
+bool Player::canBet(float amount) const
+{
     return (amount <= money);
 }
 
-void Player::setCurrentBet(float newBet) {
+void Player::setCurrentBet(float newBet)
+{
     currentBet = newBet;
 }
 
@@ -95,8 +103,8 @@ const std::string &Player::getName() const
     return name;
 }
 
-
-bool Player::isBusted() const {
+bool Player::isBusted() const
+{
     return (calculateHandTotal() > 21);
 }
 
@@ -148,8 +156,8 @@ void Player::setTotal()
 {
     hand.clear();
 
-    auto card1 = std::make_shared<Card>(10, Suit::HEARTS);
-    auto card2 = std::make_shared<Card>(10, Suit::DIAMONDS);
+    auto card1 = std::make_shared<Card>(10, Suit::Hearts);
+    auto card2 = std::make_shared<Card>(10, Suit::Diamonds);
 
     hand.push_back(card1);
     hand.push_back(card2);

@@ -4,31 +4,24 @@
 #include <string>
 #include <memory>
 
-enum class Suit {
+enum class Suit
+{
     Hearts,
     Diamonds,
     Clubs,
     Spades
 };
 
-enum class Suit
-{
-    HEARTS,
-    DIAMONDS,
-    CLUBS,
-    SPADES
-};
-
 class Card
 {
 public:
     Card(int value, Suit suit);
-    void setPosition(const sf::Vector2f& pos);
-    void draw(sf::RenderWindow& window, const sf::Font& font, bool faceUp = true);
+    void setPosition(const sf::Vector2f &pos);
+    void draw(sf::RenderWindow &window, const sf::Font &font, bool faceUp = true);
     int getValue() const { return value; }
     Suit getSuit() const { return suit; }
     std::string toString() const;
-    bool isAce() const { return value == 1; }  // New method
+    bool isAce() const { return value == 1; } // New method
 
 private:
     int value;
@@ -40,7 +33,7 @@ private:
     std::vector<sf::CircleShape> suitSymbols;
     sf::Text rankText1; // Top-left
     sf::Text rankText2; // Bottom-right
-    
+
     // Helper methods
     void setupVisuals();
     void createSuitSymbols();

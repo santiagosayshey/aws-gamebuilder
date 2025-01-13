@@ -13,7 +13,7 @@
 class GameState : public State
 {
 public:
-    GameState(sf::RenderWindow& window, const GameSettings& settings);
+    GameState(sf::RenderWindow &window, const GameSettings &settings);
 
     void handleInput() override;
     void update() override;
@@ -34,7 +34,7 @@ private:
     WildcardDeck wildcardDeck;
     std::vector<Player> players;
 
-    float pot; 
+    float pot;
     int currentPlayerIndex;
     bool roundInProgress;
     bool roundConcluded;
@@ -45,6 +45,7 @@ private:
     Button standButton;
     Button wildcardButton;
     Button addBetButton;
+    Button doubleDownButton;
 
     // Font & texts
     sf::Font font;

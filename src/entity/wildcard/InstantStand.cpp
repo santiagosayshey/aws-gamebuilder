@@ -1,30 +1,23 @@
 
-#include "Wildcard.hpp"
+#include "InstantStand.hpp"
 #include "entity/Player.hpp"
 
-class InstantStand : public Wildcard
+void InstantStand::use(Player &owner, std::vector<Player> &allPlayers)
 {
-public:
-    InstantStand() = default;
-    ~InstantStand() = default;
+    owner.setTotal();
+}
 
-    void use(Player &owner, std::vector<Player> &allPlayers) override
-    {
-        owner.setTotal();
-    }
+std::string InstantStand::getName() const
+{
+    return "Instant Stand";
+}
 
-    std::string getName() const override
-    {
-        return "Instant Stand";
-    }
+std::string InstantStand::getDescription() const
+{
+    return "Sets your hand total to 20.";
+}
 
-    std::string getDescription() const override
-    {
-        return "Sets your hand total to 20.";
-    }
-
-    Timing getUsageTiming() const override
-    {
-        return Timing::ANY_TIME;
-    }
-};
+Wildcard::Timing InstantStand::getUsageTiming() const
+{
+    return Wildcard::Timing::AFTER_DRAW;
+}

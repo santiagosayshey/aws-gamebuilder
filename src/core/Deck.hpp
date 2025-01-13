@@ -3,7 +3,8 @@
 #include <vector>
 #include "../entity/Card.hpp"
 
-class Deck {
+class Deck
+{
 public:
     Deck();
 
@@ -12,7 +13,7 @@ public:
     void reset();
 
     size_t size() const;
-    const Card& peek() const;
+    const Card &peek() const;
 
 private:
     std::vector<Card> cards;

@@ -1,34 +1,24 @@
 
-#include "Wildcard.hpp"
+#include "Foresight.hpp"
 #include "entity/Player.hpp"
 #include "states/GameState.hpp"
 
-class Foresight : public Wildcard
+void Foresight::use(Player &owner, std::vector<Player> &)
 {
-public:
-    Foresight() = default;
-    ~Foresight() = default;
+    const Card &nextCard = gameState.peekNextCard();
+}
 
-    void use(Player &owner, std::vector<Player> &allPlayers) override
-    {
-        const Card &nextCard = gameState.peekNextCard();
-    }
+std::string Foresight::getName() const
+{
+    return "Foresight";
+}
 
-    std::string getName() const override
-    {
-        return "Foresight";
-    }
+std::string Foresight::getDescription() const
+{
+    return "Allows you to see the next card in the deck.";
+}
 
-    std::string getDescription() const override
-    {
-        return "Allows you to see the next card in the deck.";
-    }
-
-    Timing getUsageTiming() const override
-    {
-        return Timing::ANY_TIME;
-    }
-
-private:
-    GameState &gameState;
-};
+Wildcard::Timing Foresight::getUsageTiming() const
+{
+    return Wildcard::Timing::AFTER_DRAW;
+}
