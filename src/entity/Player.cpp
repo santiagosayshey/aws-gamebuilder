@@ -118,3 +118,21 @@ void Player::doubleBet()
         currentBet *= 2;
     }
 }
+
+void Player::activateSafeHit(){
+    safeHitActive = true;
+}
+
+void Player::hit(Deck& deck) {
+    Card card = deck.draw();  
+    std::shared_ptr<Card> cardPtr = std::make_shared<Card>(card); 
+
+    hand.push_back(cardPtr); 
+
+    if (safeHitActive && calculateHandTotal() > 21) {
+        hand.pop_back();
+        safeHitActive = false; 
+    } else if (safeHitActive) {
+        safeHitActive = false;
+    }
+}

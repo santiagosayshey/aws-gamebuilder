@@ -1,33 +1,27 @@
 #include "Tycoon.hpp"
 #include "entity/Player.hpp"
 
-class Tycoon : public Wildcard {
-public:
-    Tycoon::Tycoon() {}
+Tycoon::Tycoon() {}
 
-    Tycoon::~Tycoon() {}
+Tycoon::~Tycoon() {}
 
-    void Tycoon::use(Player& owner, std::vector<Player>& players) override {
-        (void)players;
-        // Get current money
-        float currentMoney = owner.getMoney();
-        
-        // Double the money by adding the current amount as winnings
-        owner.addWinnings(currentMoney);
-    }
+void Tycoon::use(Player& owner, std::vector<Player>& players) {
+    (void)players; 
+    // Get current money
+    float currentMoney = owner.getMoney();
+    
+    // Double the money by adding the current amount as winnings
+    owner.addWinnings(currentMoney);
+}
 
-    std::string Tycoon::getName() const override {
-        return "Tycoon";
-    }
+std::string Tycoon::getName() const {
+    return "Tycoon";
+}
 
-    std::string Tycoon::getDescription() const override {
-        return "Doubles your winnings";
-    }
+std::string Tycoon::getDescription() const {
+    return "Doubles your current money.";
+}
 
-    Timing Tycoon::getUsageTiming() const override {
-        return Timing::ANY_TIME;
-    }
-};
-
-
-
+Tycoon::Timing Tycoon::getUsageTiming() const {
+    return Timing::ANY_TIME;
+}
