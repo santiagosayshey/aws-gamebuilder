@@ -10,13 +10,15 @@
 #include <vector>
 #include <memory>
 
-class GameState : public State {
+class GameState : public State
+{
 public:
     GameState(sf::RenderWindow& window, const GameSettings& settings);
 
     void handleInput() override;
     void update() override;
     void render() override;
+    const Card &peekNextCard() const;
 
 private:
     void startNewRound();

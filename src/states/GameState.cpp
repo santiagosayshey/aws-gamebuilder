@@ -15,6 +15,7 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     , standButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "STAND", sf::Font())
     , wildcardButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "WILDCARD", sf::Font())
     , addBetButton(sf::Vector2f(0.f, 0.f), sf::Vector2f(120.f, 50.f), "BET $10", sf::Font())
+    , deck()
 {
     // Load font
     std::vector<std::string> systemFonts = {
@@ -157,10 +158,13 @@ void GameState::dealWildcards() {
     }
 }
 
-void GameState::handleInput() {
+void GameState::handleInput()
+{
     sf::Event event;
-    while (window.pollEvent(event)) {
-        if (event.type == sf::Event::Closed) {
+    while (window.pollEvent(event))
+    {
+        if (event.type == sf::Event::Closed)
+        {
             window.close();
         }
         else if (waitingForReplay && event.type == sf::Event::KeyPressed) {
@@ -238,6 +242,7 @@ void GameState::update() {
     addBetButton.update(dt);
 }
 
+
 void GameState::nextPlayer() {
     currentPlayerIndex++;
     if (currentPlayerIndex >= (int)players.size()) {
@@ -314,6 +319,7 @@ void GameState::updateLabels() {
         wildcardInfoText.setString("");
     }
 }
+
 
 void GameState::render() {
     window.clear(sf::Color(0, 60, 0));  // Darker base green
@@ -459,4 +465,9 @@ void GameState::render() {
     drawTextWithShadow(potText);
 
     window.display();
+}
+
+const Card &GameState::peekNextCard() const
+{
+    return deck.peek();
 }

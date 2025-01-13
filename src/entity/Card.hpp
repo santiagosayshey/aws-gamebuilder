@@ -11,7 +11,16 @@ enum class Suit {
     Spades
 };
 
-class Card {
+enum class Suit
+{
+    HEARTS,
+    DIAMONDS,
+    CLUBS,
+    SPADES
+};
+
+class Card
+{
 public:
     Card(int value, Suit suit);
     void setPosition(const sf::Vector2f& pos);

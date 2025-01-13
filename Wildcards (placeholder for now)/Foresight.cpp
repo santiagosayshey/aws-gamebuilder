@@ -1,8 +1,11 @@
-
-#include "Wildcard.hpp"
+#pragma once
+#include "Wildcards.hpp"
 #include "entity/Player.hpp"
-#include "states/GameState.hpp"
+#include "entity/Card.hpp"
+#include <vector>
+#include <iostream>
 
+// incomplete
 class Foresight : public Wildcard
 {
 public:
@@ -11,7 +14,7 @@ public:
 
     void use(Player &owner, std::vector<Player> &allPlayers) override
     {
-        const Card &nextCard = gameState.peekNextCard();
+        // logic
     }
 
     std::string getName() const override
@@ -21,14 +24,11 @@ public:
 
     std::string getDescription() const override
     {
-        return "Allows you to see the next card in the deck.";
+        return "See the next card that will be drawn.";
     }
 
     Timing getUsageTiming() const override
     {
-        return Timing::ANY_TIME;
+        return Timing::BEFORE_DRAW;
     }
-
-private:
-    GameState &gameState;
 };

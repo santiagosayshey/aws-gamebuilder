@@ -13,18 +13,20 @@ GameSettingsState::GameSettingsState(sf::RenderWindow& window)
     settings.startingMoney = 500.0f;
     settings.minBet = 10.0f;
     settings.wildcardEnabled = false;
-    
-    if (!loadResources()) {
+
+    if (!loadResources())
+    {
         window.close();
         return;
     }
-    
+
     initializeDecorations();
     initializeButtons();
     updateSettingsText();
 }
 
-bool GameSettingsState::loadResources() {
+bool GameSettingsState::loadResources()
+{
     // Load title font (casino style)
     if (!titleFont.loadFromFile("src/assets/font/Casino.ttf")) {
         std::cerr << "Error: Could not load title font file.\n";
@@ -49,8 +51,10 @@ bool GameSettingsState::loadResources() {
     };
     
     bool standardFontLoaded = false;
-    for (const auto& path : fontPaths) {
-        if (standardFont.loadFromFile(path)) {
+    for (const auto &path : fontPaths)
+    {
+        if (standardFont.loadFromFile(path))
+        {
             standardFontLoaded = true;
             break;
         }
@@ -79,8 +83,9 @@ bool GameSettingsState::loadResources() {
     settingTexts.resize(4);
     float startY = window.getSize().y / 2.f - 100.f;
     float spacing = 100.f;
-    
-    for (auto& text : settingTexts) {
+
+    for (auto &text : settingTexts)
+    {
         text.setFont(standardFont);
         text.setCharacterSize(32);
         text.setFillColor(sf::Color(220, 220, 220));
@@ -92,6 +97,7 @@ bool GameSettingsState::loadResources() {
 
     return true;
 }
+
 
 void GameSettingsState::initializeDecorations() {
     // Example decorative circles
@@ -119,11 +125,13 @@ void GameSettingsState::initializeDecorations() {
     decorativeCircles.push_back(circle2);
 }
 
-void GameSettingsState::initializeButtons() {
+void GameSettingsState::initializeButtons()
+{
     float startY = window.getSize().y / 2.f - 100.f;
     float spacing = 100.f;
     const float adjustButtonWidth = 60.f;
     const float adjustButtonHeight = 50.f;
+
 
     // For the first 3 settings
     for (int i = 0; i < 3; ++i) {
@@ -141,6 +149,7 @@ void GameSettingsState::initializeButtons() {
         minusShape.setFillColor(sf::Color::White);
         minusShape.setOrigin(minusShape.getSize().x / 2.f, minusShape.getSize().y / 2.f);
         minusShape.setPosition(
+
             minusButton.getPosition().x + adjustButtonWidth / 2.f,
             minusButton.getPosition().y + adjustButtonHeight / 2.f
         );
@@ -185,11 +194,11 @@ void GameSettingsState::initializeButtons() {
     const float sliderWidth = 120.f;
     const float sliderHeight = 8.f;
     const float handleSize = 24.f;
-    
+
     sliderTrack.setSize(sf::Vector2f(sliderWidth, sliderHeight));
     sliderTrack.setPosition(window.getSize().x / 2.f + 100.f, startY + 15.f);
     sliderTrack.setFillColor(sf::Color(100, 100, 100));
-    
+
     sliderHandle.setSize(sf::Vector2f(handleSize, handleSize));
     sliderHandle.setOrigin(handleSize / 2.f, handleSize / 2.f);
     sliderHandle.setPosition(
@@ -206,8 +215,7 @@ void GameSettingsState::initializeButtons() {
         "START GAME",
         buttonFont,
         sf::Color(220, 220, 220),
-        sf::Color(255, 215, 0)
-    );
+        sf::Color(255, 215, 0));
 
     // "BACK" button
     buttons.emplace_back(
@@ -216,11 +224,11 @@ void GameSettingsState::initializeButtons() {
         "BACK",
         buttonFont,
         sf::Color(220, 220, 220),
-        sf::Color(255, 215, 0)
-    );
+        sf::Color(255, 215, 0));
 }
 
-void GameSettingsState::updateSettingsText() {
+void GameSettingsState::updateSettingsText()
+{
     settingTexts[0].setString("Players: " + std::to_string(settings.numPlayers));
     settingTexts[1].setString("Starting Cash: $" + std::to_string((int)settings.startingMoney));
     settingTexts[2].setString("Minimum Bet: $" + std::to_string((int)settings.minBet));
@@ -265,8 +273,10 @@ sf::Vector2f GameSettingsState::getMousePosition() const {
 
 void GameSettingsState::handleInput() {
     sf::Event event;
-    while (window.pollEvent(event)) {
-        if (event.type == sf::Event::Closed) {
+    while (window.pollEvent(event))
+    {
+        if (event.type == sf::Event::Closed)
+        {
             window.close();
         }
         
@@ -338,8 +348,7 @@ void GameSettingsState::handleInput() {
                 float newX = std::clamp(
                     mousePos.x,
                     sliderTrack.getPosition().x,
-                    sliderTrack.getPosition().x + sliderTrack.getSize().x
-                );
+                    std::min(mousePos.x, sliderTrack.getPosition().x + sliderTrack.getSize().x));
                 sliderHandle.setPosition(newX, sliderHandle.getPosition().y);
             }
         }

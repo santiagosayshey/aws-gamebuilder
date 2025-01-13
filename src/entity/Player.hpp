@@ -2,20 +2,24 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <iostream>
 #include "Card.hpp"
 #include "wildcard/Wildcard.hpp"
 
-class Player {
+class Player
+{
 public:
-    Player(const std::string& name, float initialMoney);
+    Player(const std::string &name, float initialMoney);
 
+    // Hand management
     void addCard(std::shared_ptr<Card> card);
     void clearHand();
     int calculateHandTotal() const;
-    const std::vector<std::shared_ptr<Card>>& getHand() const;
+    const std::vector<std::shared_ptr<Card>> &getHand() const;
+    void setTotal();
 
-    // Money & betting
     void placeBet(float amount);
+    void doubleBet(float amount);
     void addWinnings(float amount);
     float getMoney() const;
     float getCurrentBet() const;
@@ -28,8 +32,8 @@ public:
 
     // Wildcard management
     void addWildcard(std::shared_ptr<Wildcard> card);
-    bool useWildcard(size_t index, std::vector<Player>& allPlayers);
-    const std::vector<std::shared_ptr<Wildcard>>& getWildcards() const;
+    bool useWildcard(size_t index, std::vector<Player> &allPlayers);
+    const std::vector<std::shared_ptr<Wildcard>> &getWildcards() const;
     bool hasWildcards() const;
     void clearWildcards();
 
