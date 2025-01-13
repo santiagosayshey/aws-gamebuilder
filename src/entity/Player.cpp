@@ -22,7 +22,7 @@ int Player::calculateHandTotal() const {
     int total = 0;
     for (auto& c : hand) {
         int val = c->getValue(); 
-        if (val > 10) {
+        if (val > 10 && val < 14) {
             val = 10; // face cards become 10
         }
         total += val;

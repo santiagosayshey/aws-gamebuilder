@@ -3,11 +3,11 @@
 #include <cmath>
 #include <algorithm>
 
-// For clarity, define card geometry
+// We'll keep the same card geometry
 static const float CARD_WIDTH = 80.f;
 static const float CARD_HEIGHT = 120.f;
 
-// Helper for fancy card shape
+// Helper to create a fancy card shape
 sf::RectangleShape createCardShape(const sf::Vector2f& position,
                                    const sf::Color& topColor,
                                    const sf::Color& bottomColor)
@@ -17,7 +17,9 @@ sf::RectangleShape createCardShape(const sf::Vector2f& position,
     shape.setPosition(position);
     shape.setOutlineThickness(2.f);
     shape.setOutlineColor(sf::Color::Black);
+    // For simplicity, we just set a single fill color (topColor).
     shape.setFillColor(topColor);
+
     return shape;
 }
 
@@ -27,11 +29,13 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     , currentPlayerIndex(0)
     , roundInProgress(false)
     , roundConcluded(false)
-    , waitingForReplay(false) 
-    // We'll fix button fonts below
-    , hitButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f, 50.f), "HIT", sf::Font())
-    , standButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f, 50.f), "STAND", sf::Font())
-    , wildcardButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f, 50.f), "WILDCARD", sf::Font())
+    , waitingForReplay(false)
+    , pot(0.f)  // <--- Initialize pot to 0
+    // We'll fix the button fonts below
+    , hitButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f,50.f), "HIT", sf::Font())
+    , standButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f,50.f), "STAND", sf::Font())
+    , wildcardButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f,50.f), "WILDCARD", sf::Font())
+    , addBetButton(sf::Vector2f(0.f,0.f), sf::Vector2f(120.f,50.f), "BET $10", sf::Font())  // <--- new
 {
     std::cout << "[GameState::CTOR] Begin\n";
     std::cout << "  -> Number of players: " << settings.numPlayers << "\n";
@@ -39,12 +43,12 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     // Create players
     players.reserve(settings.numPlayers);
     for (int i = 0; i < settings.numPlayers; ++i) {
-        players.emplace_back("Player " + std::to_string(i + 1), settings.startingMoney);
-        std::cout << "     Created " << players.back().getName()
+        players.emplace_back("Player " + std::to_string(i+1), settings.startingMoney);
+        std::cout << "     Created " << players.back().getName() 
                   << " with $" << settings.startingMoney << "\n";
     }
 
-    // 1) Load a basic system font
+    // 1) Load a basic system font (e.g. "arial.ttf")
     std::vector<std::string> systemFonts = {
         "arial.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -63,11 +67,12 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     }
 
     // 2) Position the buttons along the bottom, spaced out horizontally
-    const float buttonY = window.getSize().y - 70.f;
+    const float buttonY = window.getSize().y - 70.f; 
     const float buttonSpacing = 200.f;
     sf::Vector2f hitPos(50.f, buttonY);
     sf::Vector2f standPos(hitPos.x + buttonSpacing, buttonY);
     sf::Vector2f wildcardPos(standPos.x + buttonSpacing, buttonY);
+    sf::Vector2f betPos(wildcardPos.x + buttonSpacing, buttonY);  // <--- for the "BET $10" button
 
     // Re-initialize the buttons with real font & new positions
     hitButton = Button(
@@ -95,6 +100,16 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
         sf::Color::Yellow
     );
 
+    // New "BET $10" button
+    addBetButton = Button(
+        betPos,
+        sf::Vector2f(120.f, 50.f),
+        "BET $10",
+        font,
+        sf::Color::White,
+        sf::Color::Yellow
+    );
+
     // Shuffle decks
     deck.shuffle();
     if (settings.wildcardEnabled) {
@@ -117,7 +132,12 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings)
     messageText.setFillColor(sf::Color::Yellow);
     messageText.setPosition(50.f, 140.f);
 
-    // Start round
+    // Add a potText to show the pot near the top-left as well
+    potText.setFont(font);
+    potText.setCharacterSize(24);
+    potText.setFillColor(sf::Color::Magenta);
+    potText.setPosition(50.f, 180.f);
+
     startNewRound();
     std::cout << "[GameState::CTOR] End\n";
 }
@@ -126,6 +146,9 @@ void GameState::startNewRound() {
     std::cout << "[GameState::startNewRound] Clear + reset\n";
     roundConcluded = false;
     waitingForReplay = false;
+    
+    // Reset pot to 0 each round
+    pot = 0.f;  
 
     for (auto& p : players) {
         p.clearHand();
@@ -173,10 +196,8 @@ void GameState::handleInput() {
         if (event.type == sf::Event::Closed) {
             window.close();
         }
-        // If concluded, pressing 'R' replays
         else if (waitingForReplay && event.type == sf::Event::KeyPressed) {
             if (event.key.code == sf::Keyboard::R) {
-                std::cout << "[GameState] 'R' pressed -> startNewRound()\n";
                 startNewRound();
             }
         }
@@ -211,6 +232,19 @@ void GameState::handleInput() {
                         messageText.setString("No wildcards to use!");
                     }
                 }
+                // BET $10
+                else if (addBetButton.isMouseOver(mousePos) && roundInProgress && !roundConcluded) {
+                    Player& current = players[currentPlayerIndex];
+                    float betAmount = 10.f;
+                    if (current.canBet(betAmount)) {
+                        current.placeBet(betAmount); 
+                        pot += betAmount;
+                        messageText.setString(current.getName() + " bet $" + std::to_string((int)betAmount));
+                    } else {
+                        messageText.setString("Not enough funds to bet $10!");
+                    }
+                    updateLabels();
+                }
             }
         }
         else if (event.type == sf::Event::MouseMoved) {
@@ -218,6 +252,7 @@ void GameState::handleInput() {
             hitButton.setHighlight(hitButton.isMouseOver(mousePos));
             standButton.setHighlight(standButton.isMouseOver(mousePos));
             wildcardButton.setHighlight(wildcardButton.isMouseOver(mousePos));
+            addBetButton.setHighlight(addBetButton.isMouseOver(mousePos));
         }
     }
 }
@@ -234,10 +269,12 @@ void GameState::update() {
         concludeRound();
     }
 
+    // Update buttons
     float dt = 1.f / 60.f;
     hitButton.update(dt);
     standButton.update(dt);
     wildcardButton.update(dt);
+    addBetButton.update(dt);
 }
 
 void GameState::nextPlayer() {
@@ -250,6 +287,7 @@ void GameState::nextPlayer() {
     }
 }
 
+// In concludeRound, pay out the pot to the winner(s)
 void GameState::concludeRound() {
     roundInProgress = false;
     roundConcluded = true;
@@ -270,21 +308,35 @@ void GameState::concludeRound() {
         }
     }
     if (winners.empty()) {
-        messageText.setString("Everyone busted. No winners! Press R to replay.");
+        // Everyone busted
+        messageText.setString("Everyone busted. No winners! Pot lost. Press R to replay.");
+        // pot is effectively lost to the house
+        pot = 0.f;
     } else {
         std::string names;
         for (auto w : winners) {
             names += players[w].getName() + " ";
         }
+        // If there's multiple winners, they share the pot equally
+        float share = pot / winners.size();
+        for (auto w : winners) {
+            players[w].addWinnings(share);
+        }
+
         messageText.setString("Winner(s): " + names
                              + " with " + std::to_string(players[winners[0]].calculateHandTotal())
-                             + ". Press R to replay!");
+                             + " and split $" + std::to_string((int)pot)
+                             + "! Press R to replay.");
+        pot = 0.f; // pot reset after payout
     }
 
     waitingForReplay = true;
 }
 
 void GameState::updateLabels() {
+    // Show the pot amount
+    potText.setString("Pot: $" + std::to_string((int)pot));
+
     if (currentPlayerIndex < (int)players.size()) {
         Player& current = players[currentPlayerIndex];
         int total = current.calculateHandTotal();
@@ -309,7 +361,7 @@ void GameState::updateLabels() {
 void GameState::render() {
     window.clear(sf::Color(20, 100, 20));  // deeper green
 
-    // swirling background
+    // swirl background
     float centerX = window.getSize().x / 2.f;
     float centerY = window.getSize().y / 2.f;
     for (int i = 0; i < 8; ++i) {
@@ -323,35 +375,32 @@ void GameState::render() {
         window.draw(swirl);
     }
 
-    // buttons
+    // Buttons
     hitButton.draw(window);
     standButton.draw(window);
     wildcardButton.draw(window);
+    addBetButton.draw(window); // new
 
-    // text overlays
+    // Info texts
     window.draw(roundInfoText);
     window.draw(wildcardInfoText);
     window.draw(messageText);
 
-    // circle layout for players
+    // Show pot text
+    window.draw(potText);
+
+    // Circular layout for players
     float radius = 250.f; 
     float angleStep = 360.f / players.size();
 
-    // Flicker for BUST: time-based
-    long long ms = animationClock.getElapsedTime().asMilliseconds();
-    float flickerTime = std::fmod(static_cast<float>(ms) / 150.f, 2.f);
-    sf::Color bustColor = (flickerTime < 1.f)
-                            ? sf::Color(255, 50, 50)   // bright red
-                            : sf::Color(255, 165, 0); // orange
-
     for (size_t i = 0; i < players.size(); ++i) {
         Player& p = players[i];
-        float angleDeg = angleStep * i - 90.f;
+        float angleDeg = angleStep * i - 90; // start top
         float angleRad = angleDeg * 3.14159f / 180.f;
         float px = centerX + radius * std::cos(angleRad);
         float py = centerY + radius * std::sin(angleRad);
 
-        // highlight current
+        // highlight if current
         if ((int)i == currentPlayerIndex) {
             sf::CircleShape highlight(60.f);
             highlight.setFillColor(sf::Color(255, 255, 0, 50));
@@ -360,28 +409,23 @@ void GameState::render() {
             window.draw(highlight);
         }
 
-        // name text
+        // If busted, color name differently
         sf::Text nameText;
         nameText.setFont(font);
         nameText.setCharacterSize(24);
-
-        // If busted, append " (BUSTED!)" to name and flicker color
         if (p.isBusted()) {
-            std::string bustedName = p.getName() + " (BUSTED!)";
-            nameText.setString(bustedName);
-            nameText.setFillColor(bustColor);
-        }
-        else {
+            nameText.setString(p.getName() + " (BUSTED!)");
+            nameText.setFillColor(sf::Color(255, 100, 100));
+        } else {
             nameText.setString(p.getName());
             nameText.setFillColor(sf::Color::White);
         }
-
         sf::FloatRect nb = nameText.getLocalBounds();
         nameText.setOrigin(nb.width/2.f, nb.height);
         nameText.setPosition(px, py - 70.f);
         window.draw(nameText);
 
-        // cards
+        // Draw their cards
         float cardOffsetX = px - (CARD_WIDTH + 10.f)*(p.getHand().size()/2.f);
         float cardOffsetY = py - CARD_HEIGHT/2.f;
         for (size_t cIndex = 0; cIndex < p.getHand().size(); ++cIndex) {
@@ -407,17 +451,17 @@ void GameState::render() {
             window.draw(cardText);
         }
 
-        // wildcards
+        // If they have wildcards, show them below
         if (p.hasWildcards()) {
             sf::Text wcLabel;
             wcLabel.setFont(font);
             wcLabel.setCharacterSize(18);
             wcLabel.setFillColor(sf::Color::Yellow);
-            std::string wildcardSummary;
+            std::string wcSummary;
             for (auto& w : p.getWildcards()) {
-                wildcardSummary += w->getName() + " ";
+                wcSummary += w->getName() + " ";
             }
-            wcLabel.setString("WC: " + wildcardSummary);
+            wcLabel.setString("WC: " + wcSummary);
             sf::FloatRect wb = wcLabel.getLocalBounds();
             wcLabel.setOrigin(wb.width/2.f, 0.f);
             wcLabel.setPosition(px, py + 70.f);
