@@ -46,4 +46,7 @@ private:
     sf::Text roundInfoText;
     sf::Text wildcardInfoText;
     sf::Text messageText;
+
+    // Clock
+    sf::Clock animationClock;
 };
