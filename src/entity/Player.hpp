@@ -41,11 +41,11 @@ public:
     void hit(Deck& deck);
     bool wasSafeHitApplied() const;
     
-
 private:
     std::string name;
     std::vector<std::shared_ptr<Card>> hand;
     std::vector<std::shared_ptr<Wildcard>> wildcards;
     float money;
     float currentBet;
+    bool safeHitUsed = false;
 };

@@ -2,25 +2,23 @@
 #include "../Player.hpp"
 
 void BalanceShift::use(Player& owner, std::vector<Player>& allPlayers) {
-    // Get the player's hand
     auto& ownerHand = owner.getHand();
     if (ownerHand.empty()) {
-        return; // No cards to balance
+        return;
     }
 
-    // Select a random opponent
+    // Select a random opponent (exclude us from the count)
     std::vector<Player*> opponents;
     for (auto& player : allPlayers) {
-        if (&player != &owner) { // Exclude the current player
+        if (&player != &owner) { 
             opponents.push_back(&player);
         }
     }
 
     if (opponents.empty()) {
-        return; // No opponents available
+        return;
     }
 
-    // Seed random number generator if not already seeded
     static bool seeded = false;
     if (!seeded) {
         std::srand(static_cast<unsigned int>(std::time(nullptr)));
@@ -40,11 +38,11 @@ void BalanceShift::use(Player& owner, std::vector<Player>& allPlayers) {
         allCardValues.push_back(card->getValue());
     }
 
-    // Calculate new balanced value
+    // Calculate new balanced value and get the average 
     int total = std::accumulate(allCardValues.begin(), allCardValues.end(), 0);
-    int newValue = total / allCardValues.size(); // Average value
+    int newValue = total / allCardValues.size(); 
 
-    // Set both players' cards to the new balanced value
+    // Assign new card corresponding to the value
     for (auto& card : ownerHand) {
         card->setValue(newValue);
     }

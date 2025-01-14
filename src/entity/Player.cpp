@@ -176,8 +176,8 @@ void Player::hit(Deck& deck) {
     if (calculateHandTotal() > 21) {
         for (auto it = wildcards.begin(); it != wildcards.end(); ++it) {
             if ((*it)->getName() == "Safe Hit") {
-                hand.pop_back(); // Remove the last card
-                wildcards.erase(it); // Remove the SafeHit wildcard
+                hand.pop_back();
+                wildcards.erase(it);
                 return;
             }
         }
