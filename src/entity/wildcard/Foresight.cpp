@@ -5,7 +5,7 @@
 
 void Foresight::use(Player &owner, std::vector<Player> &)
 {
-    const Card &nextCard = gameState.peekNextCard();
+    // peek at the next card in the deck
 }
 
 std::string Foresight::getName() const

@@ -10,7 +10,4 @@ public:
     std::string getName() const override;
     std::string getDescription() const override;
     Timing getUsageTiming() const override;
-
-private:
-    GameState &gameState;
 };

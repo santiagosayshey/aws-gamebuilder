@@ -58,6 +58,15 @@ GameState::GameState(sf::RenderWindow &window, const GameSettings &settings)
         sf::Color::Yellow);
     currentX += 120.f + buttonSpacing;
 
+    doubleDownButton = Button(
+        sf::Vector2f(currentX, buttonY),
+        sf::Vector2f(180.f, 50.f), // Wider button
+        "DOUBLE DOWN",
+        font,
+        sf::Color::White,
+        sf::Color::Yellow);
+    currentX += 180.f + buttonSpacing;
+
     wildcardButton = Button(
         sf::Vector2f(currentX, buttonY),
         sf::Vector2f(180.f, 50.f), // Wider button
@@ -225,6 +234,28 @@ void GameState::handleInput()
                             messageText.setString("Not enough funds to bet $10!");
                         }
                         updateLabels();
+                    }
+                    else if (doubleDownButton.isMouseOver(mousePos))
+                    {
+                        if (current.canBet(pot))
+                        {
+                            float betAmount = pot;
+                            current.doubleBet(betAmount);
+                            pot += betAmount;
+                            messageText.setString(current.getName() + " doubled down.");
+
+                            Card c = deck.draw();
+                            current.addCard(std::make_shared<Card>(c));
+                            if (current.isBusted())
+                            {
+                                messageText.setString(current.getName() + " BUSTED!");
+                            }
+                            updateLabels();
+                        }
+                        else
+                        {
+                            messageText.setString("Not enough funds");
+                        }
                     }
                 }
             }
@@ -497,6 +528,7 @@ void GameState::render()
     // Draw UI elements with subtle glow effects
     hitButton.draw(window);
     standButton.draw(window);
+    doubleDownButton.draw(window);
     wildcardButton.draw(window);
     addBetButton.draw(window);
 
