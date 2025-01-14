@@ -9,7 +9,7 @@ GameSettingsState::GameSettingsState(sf::RenderWindow& window)
     , isDraggingSlider(false)
 {
     // Default settings
-    settings.numPlayers = 1;
+    settings.numPlayers = 2;
     settings.startingMoney = 500.0f;
     settings.minBet = 10.0f;
     settings.wildcardEnabled = false;
@@ -245,7 +245,7 @@ void GameSettingsState::adjustSetting(int settingIndex, bool increase) {
     case 0: // numPlayers
         if (increase && settings.numPlayers < 6) {
             settings.numPlayers++;
-        } else if (!increase && settings.numPlayers > 1) {
+        } else if (!increase && settings.numPlayers > 2) {
             settings.numPlayers--;
         }
         break;

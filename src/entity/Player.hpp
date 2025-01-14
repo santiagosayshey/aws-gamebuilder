@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include "Card.hpp"
+#include "../core/Deck.hpp"
 #include "wildcard/Wildcard.hpp"
 
 class Player
@@ -40,6 +41,10 @@ public:
     void setForesight();
     void setForesightFalse();
 
+    // SafeHit wildcard functions
+    void hit(Deck& deck);
+    bool wasSafeHitApplied() const;
+    
 private:
     std::string name;
     std::vector<std::shared_ptr<Card>> hand;
@@ -47,4 +52,5 @@ private:
     float money;
     float currentBet;
     bool foresight = false;
+    bool safeHitUsed = false;
 };

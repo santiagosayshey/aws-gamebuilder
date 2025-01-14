@@ -22,6 +22,8 @@ public:
     Suit getSuit() const { return suit; }
     std::string toString() const;
     bool isAce() const { return value == 1; } // New method
+    // Balance Shift wildcard helper method
+    void setValue(int newValue);
 
 private:
     int value;

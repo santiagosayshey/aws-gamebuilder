@@ -185,3 +185,23 @@ void Player::setForesightFalse()
 {
     foresight = false;
 }
+// SafeHit wildcard
+bool Player::wasSafeHitApplied() const {
+    return std::any_of(wildcards.begin(), wildcards.end(), 
+                       [](const auto& w) { return w->getName() == "Safe Hit"; });
+}
+
+void Player::hit(Deck& deck) {
+    auto card = deck.draw();
+    hand.push_back(std::make_shared<Card>(card));
+
+    if (calculateHandTotal() > 21) {
+        for (auto it = wildcards.begin(); it != wildcards.end(); ++it) {
+            if ((*it)->getName() == "Safe Hit") {
+                hand.pop_back();
+                wildcards.erase(it);
+                return;
+            }
+        }
+    }
+}

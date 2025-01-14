@@ -433,6 +433,9 @@ void GameState::updateLabels()
                 wildcardInfoText.setString("No wildcards available.");
             }
         }
+        if (current.wasSafeHitApplied()) {
+            messageText.setString(current.getName() + " used Safe Hit!");
+        }
     }
     else
     {

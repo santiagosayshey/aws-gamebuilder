@@ -130,3 +130,8 @@ void Card::draw(sf::RenderWindow& window, const sf::Font& font, bool faceUp) {
 std::string Card::toString() const {
     return getRankString() + std::string(1, "HDCS"[static_cast<int>(suit)]);
 }
+// Balance Shift wildcard
+void Card::setValue(int newValue) {
+    value = newValue;
+    setupVisuals();
+}
