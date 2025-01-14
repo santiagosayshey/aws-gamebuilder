@@ -15,7 +15,7 @@ https://awsdevchallenge.devpost.com/?ref_feature=challenge&ref_medium=discover
 
 ## Amazon Web Services Integration
 1. **Amazon Q Developer**
-   - Amazon Q Developer played a critical role in developing our game. The service's integration streamlined wildcard mechanics by optimizing decision-tree evaluations in real-time, enhancing gameplay fluidity.
+   - Amazon Q Developer played a critical role in developing our game. The service's integration especially helped design and implement the creative wildcards!
 
 ## Requirements
 - SFML 2.6.1
