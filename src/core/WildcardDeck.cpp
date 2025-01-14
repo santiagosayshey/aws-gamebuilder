@@ -6,7 +6,6 @@
 #include "../entity/wildcard/ExtraBet.hpp"
 #include "../entity/wildcard/Duplicate.hpp"
 #include "../entity/wildcard/Tycoon.hpp"
-#include "../entity/wildcard/Foresight.hpp"
 #include "../entity/wildcard/InstantStand.hpp"
 #include "../entity/wildcard/SafeHit.hpp"
 #include "../entity/wildcard/BalanceShift.hpp"
@@ -23,7 +22,6 @@ void WildcardDeck::initialize() {
     cards.push_back(std::make_shared<ExtraBet>());
     cards.push_back(std::make_shared<Duplicate>());
     cards.push_back(std::make_shared<Tycoon>());
-    // cards.push_back(std::make_shared<Foresight>());
     cards.push_back(std::make_shared<InstantStand>());
     cards.push_back(std::make_shared<SafeHit>());
     cards.push_back(std::make_shared<BalanceShift>());
