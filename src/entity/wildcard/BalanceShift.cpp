@@ -10,7 +10,7 @@ void BalanceShift::use(Player& owner, std::vector<Player>& allPlayers) {
     // Select a random opponent (exclude us from the count)
     std::vector<Player*> opponents;
     for (auto& player : allPlayers) {
-        if (&player != &owner) { 
+        if (&player != &owner && !player.isBusted()) { 
             opponents.push_back(&player);
         }
     }
