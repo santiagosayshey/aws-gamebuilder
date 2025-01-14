@@ -162,3 +162,27 @@ void Player::setTotal()
     hand.push_back(card1);
     hand.push_back(card2);
 }
+
+// SafeHit wildcard
+void Player::activateSafeHit(){
+    safeHitActive = true;
+}
+
+bool Player::isSafeHitActive() const {
+    return safeHitActive;
+}
+
+void Player::hit(Deck& deck) {
+    if (hand.empty() && safeHitActive) {
+        safeHitActive = false;
+        return; // Skip the hit if SafeHit is activated incorrectly
+    }
+
+    auto card = deck.draw(); 
+    hand.push_back(std::make_shared<Card>(card));
+
+    if (safeHitActive && calculateHandTotal() > 21) {
+        hand.pop_back(); // Remove the last card if it causes busting
+        safeHitActive = false; 
+    }
+}

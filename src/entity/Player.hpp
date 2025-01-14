@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include "Card.hpp"
+#include "Deck.hpp"
 #include "wildcard/Wildcard.hpp"
 
 class Player
@@ -36,6 +37,11 @@ public:
     const std::vector<std::shared_ptr<Wildcard>> &getWildcards() const;
     bool hasWildcards() const;
     void clearWildcards();
+    // SafeHit wildcard functions
+    void hit(Deck& deck);
+    void activateSafeHit();
+    bool isSafeHitActive() const;
+    
 
 private:
     std::string name;
@@ -43,4 +49,5 @@ private:
     std::vector<std::shared_ptr<Wildcard>> wildcards;
     float money;
     float currentBet;
+    bool safeHitActive = false;
 };
