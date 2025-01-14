@@ -184,8 +184,13 @@ void GameState::handleInput()
                     if (hitButton.isMouseOver(mousePos))
                     {
                         current.hit(deck);
-                        if (current.isBusted()) {
+                        if (current.isBusted())
+                        {
                             messageText.setString(current.getName() + " BUSTED!");
+                        }
+                        else
+                        {
+                            messageText.setString(current.getName() + " hit.");
                         }
                         updateLabels();
                     }
@@ -348,8 +353,8 @@ void GameState::updateLabels()
         {
             wildcardInfoText.setString("No wildcards available.");
         }
-        if (current.isSafeHitActive()) {
-        wildcardInfoText.setString(wildcardInfoText.getString() + " (Safe Hit Active)");
+        if (current.wasSafeHitApplied()) {
+            messageText.setString(current.getName() + " used Safe Hit!");
         }
     }
     else

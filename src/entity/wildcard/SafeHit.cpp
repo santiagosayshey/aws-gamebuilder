@@ -2,10 +2,7 @@
 #include "SafeHit.hpp"
 #include "entity/Player.hpp"
 
-void SafeHit::use(Player &owner, std::vector<Player> &allPlayers)
-{
-    owner.activateSafeHit();
-}
+void SafeHit::use(Player &owner, std::vector<Player> &allPlayers) {}
 
 std::string SafeHit::getName() const
 {

@@ -164,25 +164,22 @@ void Player::setTotal()
 }
 
 // SafeHit wildcard
-void Player::activateSafeHit(){
-    safeHitActive = true;
-}
-
-bool Player::isSafeHitActive() const {
-    return safeHitActive;
+bool Player::wasSafeHitApplied() const {
+    return std::any_of(wildcards.begin(), wildcards.end(), 
+                       [](const auto& w) { return w->getName() == "Safe Hit"; });
 }
 
 void Player::hit(Deck& deck) {
-    if (hand.empty() && safeHitActive) {
-        safeHitActive = false;
-        return;
-    }
     auto card = deck.draw();
-    int preTotalHand = calculateHandTotal();
     hand.push_back(std::make_shared<Card>(card));
 
-    if (safeHitActive && calculateHandTotal() > 21) {
-        hand.pop_back();
-        safeHitActive = false;
+    if (calculateHandTotal() > 21) {
+        for (auto it = wildcards.begin(); it != wildcards.end(); ++it) {
+            if ((*it)->getName() == "Safe Hit") {
+                hand.pop_back(); // Remove the last card
+                wildcards.erase(it); // Remove the SafeHit wildcard
+                return;
+            }
+        }
     }
 }
