@@ -27,11 +27,12 @@ private:
     void nextPlayer();
     void concludeRound();
     void updateLabels();
+    void initializeDecorations(); 
 
     // Game settings and state
     GameSettings settings;
     std::vector<Player> players;
-    std::vector<PlayerBet> initialBets;  // Store initial bets
+    std::vector<PlayerBet> initialBets; 
     int currentPlayerIndex;
     bool roundInProgress;
     bool roundConcluded;
@@ -52,12 +53,20 @@ private:
     sf::Text roundInfoText;
     sf::Text wildcardInfoText;
     sf::Text messageText;
-    sf::Text playerMoneyText;  // Replaces potText
+    sf::Text playerMoneyText; 
 
     // Utility variables
     float animationTime = 0.0f;
     
     // Decorative elements
-    std::vector<sf::CircleShape> cornerCircles;
-    static constexpr float CIRCLE_ANIMATION_SPEED = 0.8f;
+    struct CircleData {
+        sf::CircleShape shape;
+        sf::Vector2f basePos;
+        float xFreq;
+        float yFreq;
+        float xAmp;
+        float yAmp;
+        float phase;
+    };
+    std::vector<CircleData> decorativeCircles;
 };

@@ -34,6 +34,9 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings, con
         std::cerr << "Failed to load any system font\n";
     }
 
+    // Initialize decorative circles
+    initializeDecorations();
+
     // Initialize players with bet information
     players.reserve(initialBets.size());
     for (const auto& bet : initialBets) {
@@ -124,6 +127,32 @@ GameState::GameState(sf::RenderWindow& window, const GameSettings& settings, con
     playerMoneyText.setPosition(50.f, 170.f);
 
     startNewRound();
+}
+
+void GameState::initializeDecorations() {
+    // Create decorative circles with different properties
+    CircleData circle1;
+    circle1.shape.setRadius(200.f);
+    circle1.basePos = sf::Vector2f(-100.f, -100.f);
+    circle1.xFreq = 0.8f;
+    circle1.yFreq = 1.5f;
+    circle1.xAmp = 15.0f;
+    circle1.yAmp = 20.0f;
+    circle1.phase = 0.0f;
+    circle1.shape.setFillColor(sf::Color(0, 70, 0));
+
+    CircleData circle2;
+    circle2.shape.setRadius(150.f);
+    circle2.basePos = sf::Vector2f(window.getSize().x - 100.f, window.getSize().y - 100.f);
+    circle2.xFreq = 0.9f;
+    circle2.yFreq = 1.2f;
+    circle2.xAmp = 20.0f;
+    circle2.yAmp = 25.0f;
+    circle2.phase = 0.5f;
+    circle2.shape.setFillColor(sf::Color(0, 70, 0));
+
+    decorativeCircles.push_back(circle1);
+    decorativeCircles.push_back(circle2);
 }
 
 void GameState::startNewRound() {
@@ -264,39 +293,6 @@ void GameState::handleInput() {
     }
 }
 
-void GameState::update() {
-    if (!roundInProgress || roundConcluded)
-        return;
-
-    Player& current = players[currentPlayerIndex];
-    int total = current.calculateHandTotal();
-    if (current.isBusted() || total == 21) {
-        nextPlayer();
-    }
-
-    animationTime += 1.f / 60.f;
-
-    // Update decorative circles
-    const float radius = 200.f;
-    for (size_t i = 0; i < cornerCircles.size(); ++i) {
-        float xOffset = std::sin(animationTime * CIRCLE_ANIMATION_SPEED + i * 0.5f) * 15.f;
-        float yOffset = std::cos(animationTime * CIRCLE_ANIMATION_SPEED + i * 0.5f) * 15.f;
-        
-        float x = (i % 2) ? window.getSize().x - radius : -radius + xOffset;
-        float y = (i / 2) ? window.getSize().y - radius : -radius + yOffset;
-        
-        cornerCircles[i].setPosition(x, y);
-    }
-
-    // Update UI elements
-    float dt = 1.f / 60.f;
-    hitButton.update(dt);
-    standButton.update(dt);
-    doubleDownButton.update(dt);
-    if (settings.wildcardEnabled) {
-        wildcardButton.update(dt);
-    }
-}
 
 void GameState::nextPlayer() {
     currentPlayerIndex++;
@@ -384,17 +380,76 @@ void GameState::updateLabels() {
     }
 }
 
+void GameState::update() {
+    if (!roundInProgress || roundConcluded)
+        return;
+
+    Player& current = players[currentPlayerIndex];
+    int total = current.calculateHandTotal();
+    if (current.isBusted() || total == 21) {
+        nextPlayer();
+    }
+
+    animationTime += 1.f / 60.f;
+
+    // Update circle animations
+    for (auto& circle : decorativeCircles) {
+        float xOffset = std::sin(animationTime * circle.xFreq + circle.phase) * circle.xAmp;
+        float yOffset = std::cos(animationTime * circle.yFreq + circle.phase) * circle.yAmp;
+        
+        // Add circular motion component
+        float circularX = std::cos(animationTime * 0.5f + circle.phase) * (circle.xAmp * 0.5f);
+        float circularY = std::sin(animationTime * 0.5f + circle.phase) * (circle.yAmp * 0.5f);
+        
+        circle.shape.setPosition(
+            circle.basePos.x + xOffset + circularX,
+            circle.basePos.y + yOffset + circularY
+        );
+    }
+
+    // Update UI elements
+    float dt = 1.f / 60.f;
+    hitButton.update(dt);
+    standButton.update(dt);
+    doubleDownButton.update(dt);
+    if (settings.wildcardEnabled) {
+        wildcardButton.update(dt);
+    }
+}
+
 void GameState::render() {
     window.clear(sf::Color(0, 60, 0));
 
-    // Draw decorative corner circles
-    for (const auto& circle : cornerCircles) {
-        window.draw(circle);
+    // Draw decorative circles
+    for (const auto& circle : decorativeCircles) {
+        window.draw(circle.shape);
     }
 
+    const float tableX = window.getSize().x / 2.f;  // Table stays centered
+    const float tableY = window.getSize().y / 2.f;
+    const float playerOffsetX = -50.f;  // Offset for players
+    const float centerX = tableX + playerOffsetX;  // Shifted center for players
+    const float centerY = tableY;
+    
+    // Draw table pattern (using tableX to keep table centered)
+    const float tableRadius = 300.f;
+    
+    sf::CircleShape tableBase(tableRadius);
+    tableBase.setPosition(tableX - tableRadius, tableY - tableRadius);
+    tableBase.setFillColor(sf::Color(0, 80, 0));
+    tableBase.setOutlineThickness(15.f);
+    tableBase.setOutlineColor(sf::Color(70, 40, 0));
+    
+    sf::CircleShape tableInner(tableRadius - 25.f);
+    tableInner.setPosition(tableX - (tableRadius - 25.f), tableY - (tableRadius - 25.f));
+    tableInner.setFillColor(sf::Color(0, 90, 0));
+    tableInner.setOutlineThickness(2.f);
+    tableInner.setOutlineColor(sf::Color(0, 100, 0));
+    
+    window.draw(tableBase);
+    window.draw(tableInner);
+
     // Draw players in a circle
-    const float centerX = window.getSize().x / 2.f;
-    const float centerY = window.getSize().y / 2.f;
     const float playerRadius = 250.f;
     const float angleStep = 360.f / players.size();
 
@@ -420,6 +475,7 @@ void GameState::render() {
         }
 
         // Center name text
+        nameText.setString(displayText);
         sf::FloatRect bounds = nameText.getLocalBounds();
         nameText.setOrigin(bounds.width / 2.f, bounds.height);
         nameText.setPosition(px, py - 80.f);
