@@ -1,56 +1,74 @@
 #pragma once
+
 #include "State.hpp"
-#include "../ui/Button.hpp"
-#include "../entity/Player.hpp"
-#include "../entity/Card.hpp"
 #include "GameSettingsState.hpp"
+#include "BettingState.hpp"
+#include "../core/Deck.hpp"
+#include "../core/WildcardDeck.hpp"
+#include "../entity/Player.hpp"
+#include "../ui/Button.hpp"
+#include <SFML/Graphics.hpp>
 #include <vector>
 #include <memory>
-#include <iostream>
 
 class GameState : public State {
 public:
-    GameState(sf::RenderWindow& window, const GameSettings& settings = GameSettings());
+    GameState(sf::RenderWindow& window, const GameSettings& settings, const std::vector<PlayerBet>& initialBets);
     
     void handleInput() override;
     void update() override;
     void render() override;
+    const Card& peekNextCard() const;
 
 private:
-    void initializeButtons();
-    bool loadResources();
+    void startNewRound();
     void dealInitialCards();
-    void dealerPlay();
-    void checkGameOver();
-    sf::Vector2f getMousePosition() const;
-    void resetGame();
-    void startNewBet();
-    void handleWin(Player& player);
-    void handleLoss(Player& player);
-    void handlePush(Player& player);
-    void updateMoneyText();
-    void nextPlayer();  // Move to next player's turn
-    size_t getCurrentPlayerIndex() const { return currentPlayerIndex; }
+    void dealWildcards();
+    void nextPlayer();
+    void concludeRound();
+    void updateLabels();
+    void initializeDecorations(); 
 
+    // Game settings and state
+    GameSettings settings;
+    std::vector<Player> players;
+    std::vector<PlayerBet> initialBets; 
+    int currentPlayerIndex;
+    bool roundInProgress;
+    bool roundConcluded;
+    bool waitingForReplay;
+    bool isWildcardHovered;
+
+    // Game systems
+    Deck deck;
+    WildcardDeck wildcardDeck;
+
+    // Game buttons
+    Button hitButton;
+    Button standButton;
+    Button doubleDownButton;
+    Button wildcardButton;
+
+    // Font & texts
     sf::Font font;
-    std::vector<Button> buttons;
-    
-    std::vector<Player> players;  // Vector of all players
-    size_t currentPlayerIndex;    // Current player's turn
-    Player dealer;
-    
-    bool playerTurn;      // True if it's players' turns, false if dealer's turn
-    bool gameOver;        // True if round is over
-    bool dealerRevealed;  // True if dealer's cards are revealed
-    bool bettingPhase;    // True if in betting phase
-    
-    float minBet;
-    
-    // Text elements for each player
-    std::vector<sf::Text> playerScoreTexts;
-    std::vector<sf::Text> playerMoneyTexts;
-    std::vector<sf::Text> playerBetTexts;
-    sf::Text dealerScoreText;
+    sf::Text roundInfoText;
+    sf::Text wildcardInfoText;
     sf::Text messageText;
-    sf::Text currentPlayerText;  // Shows which player's turn it is
+    sf::Text playerMoneyText; 
+    sf::Text wildcardHoverText;
+
+    // Utility variables
+    float animationTime = 0.0f;
+    
+    // Decorative elements
+    struct CircleData {
+        sf::CircleShape shape;
+        sf::Vector2f basePos;
+        float xFreq;
+        float yFreq;
+        float xAmp;
+        float yAmp;
+        float phase;
+    };
+    std::vector<CircleData> decorativeCircles;
 };
