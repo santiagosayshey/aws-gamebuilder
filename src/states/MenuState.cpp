@@ -23,7 +23,7 @@ void MenuState::loadResources() {
 
     // Setup title text with casino styling
     titleText.setFont(titleFont);
-    titleText.setString("Jack of Fortune");
+    titleText.setString("Blazing Aces");
     titleText.setCharacterSize(80);
     titleText.setLetterSpacing(2.0f);
     titleText.setFillColor(sf::Color(255, 215, 0));  // Gold color
