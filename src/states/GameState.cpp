@@ -183,10 +183,8 @@ void GameState::handleInput()
 
                     if (hitButton.isMouseOver(mousePos))
                     {
-                        Card c = deck.draw();
-                        current.addCard(std::make_shared<Card>(c));
-                        if (current.isBusted())
-                        {
+                        current.hit(deck);
+                        if (current.isBusted()) {
                             messageText.setString(current.getName() + " BUSTED!");
                         }
                         updateLabels();
@@ -349,6 +347,9 @@ void GameState::updateLabels()
         else
         {
             wildcardInfoText.setString("No wildcards available.");
+        }
+        if (current.isSafeHitActive()) {
+        wildcardInfoText.setString(wildcardInfoText.getString() + " (Safe Hit Active)");
         }
     }
     else

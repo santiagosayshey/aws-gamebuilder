@@ -175,14 +175,14 @@ bool Player::isSafeHitActive() const {
 void Player::hit(Deck& deck) {
     if (hand.empty() && safeHitActive) {
         safeHitActive = false;
-        return; // Skip the hit if SafeHit is activated incorrectly
+        return;
     }
-
-    auto card = deck.draw(); 
+    auto card = deck.draw();
+    int preTotalHand = calculateHandTotal();
     hand.push_back(std::make_shared<Card>(card));
 
     if (safeHitActive && calculateHandTotal() > 21) {
-        hand.pop_back(); // Remove the last card if it causes busting
-        safeHitActive = false; 
+        hand.pop_back();
+        safeHitActive = false;
     }
 }
