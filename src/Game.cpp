@@ -47,8 +47,10 @@ void Game::run() {
                     case StateChange::Game: {
                         std::cout << "Changing to Game state" << std::endl;
                         const GameSettings& settings =
-                            dynamic_cast<GameSettingsState*>(currentState.get())->getSettings();
-                        changeState(std::make_unique<GameState>(window, settings));
+                            dynamic_cast<BettingState*>(currentState.get())->getSettings();
+                        const std::vector<PlayerBet>& bets =
+                            dynamic_cast<BettingState*>(currentState.get())->getPlayerBets();
+                        changeState(std::make_unique<GameState>(window, settings, bets));
                         break;
                     }
                     case StateChange::Help:

@@ -2,6 +2,7 @@
 
 #include "State.hpp"
 #include "GameSettingsState.hpp"
+#include "BettingState.hpp"
 #include "../core/Deck.hpp"
 #include "../core/WildcardDeck.hpp"
 #include "../entity/Player.hpp"
@@ -10,15 +11,14 @@
 #include <vector>
 #include <memory>
 
-class GameState : public State
-{
+class GameState : public State {
 public:
-    GameState(sf::RenderWindow &window, const GameSettings &settings);
-
+    GameState(sf::RenderWindow& window, const GameSettings& settings, const std::vector<PlayerBet>& initialBets);
+    
     void handleInput() override;
     void update() override;
     void render() override;
-    const Card &peekNextCard() const;
+    const Card& peekNextCard() const;
 
 private:
     void startNewRound();
@@ -28,30 +28,36 @@ private:
     void concludeRound();
     void updateLabels();
 
-    // Data
+    // Game settings and state
     GameSettings settings;
-    Deck deck;
-    WildcardDeck wildcardDeck;
     std::vector<Player> players;
-
-    float pot;
+    std::vector<PlayerBet> initialBets;  // Store initial bets
     int currentPlayerIndex;
     bool roundInProgress;
     bool roundConcluded;
     bool waitingForReplay;
 
-    // Buttons
+    // Game systems
+    Deck deck;
+    WildcardDeck wildcardDeck;
+
+    // Game buttons
     Button hitButton;
     Button standButton;
-    Button wildcardButton;
-    Button addBetButton;
     Button doubleDownButton;
+    Button wildcardButton;
 
     // Font & texts
     sf::Font font;
     sf::Text roundInfoText;
     sf::Text wildcardInfoText;
     sf::Text messageText;
+    sf::Text playerMoneyText;  // Replaces potText
 
-    sf::Text potText;
+    // Utility variables
+    float animationTime = 0.0f;
+    
+    // Decorative elements
+    std::vector<sf::CircleShape> cornerCircles;
+    static constexpr float CIRCLE_ANIMATION_SPEED = 0.8f;
 };

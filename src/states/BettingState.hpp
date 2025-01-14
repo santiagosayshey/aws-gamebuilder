@@ -22,6 +22,7 @@ public:
     void render() override;
 
     const std::vector<PlayerBet>& getPlayerBets() const { return playerBets; }
+    const GameSettings& getSettings() const { return settings; }
 
 private:
     bool loadResources();
