@@ -24,10 +24,9 @@ https://awsdevchallenge.devpost.com/?ref_feature=challenge&ref_medium=discover
 ## Compilation
 To compile the project, follow these steps:
 
-1. Make sure you have SFML 2.6.1 installed on your system.
 2. Clone the repository:
    ```
-   git clone https://github.com/username/blazing-aces.git
+   git clone https://github.com/santiagosayshey/blazing-aces.git
    ```
 3. Navigate to the project directory:
    ```
