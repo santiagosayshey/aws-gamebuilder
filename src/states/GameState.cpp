@@ -487,7 +487,7 @@ void GameState::render()
         nameText.setPosition(px, py - 80.f);
         window.draw(nameText);
 
-        // Draw player's cards
+        // Draw player's cards with blur effect for non-active players
         const float cardWidth = 75.f;
         const float cardHeight = 100.f;
         const float cardSpacing = 30.f;
@@ -499,17 +499,54 @@ void GameState::render()
         {
             float cardX = startX + j * (cardWidth + cardSpacing);
             const auto &card = hand[j];
-            card->setPosition(sf::Vector2f(cardX, py - cardHeight / 2.f));
-            card->draw(window, font);
+            
+            // Only show clear cards for active player
+            if ((int)i == currentPlayerIndex)
+            {
+                card->setPosition(sf::Vector2f(cardX, py - cardHeight / 2.f));
+                card->draw(window, font);
+            }
+            else
+            {
+                // Draw blurred/hidden card back for non-active players
+                sf::RectangleShape cardBack(sf::Vector2f(cardWidth, cardHeight));
+                cardBack.setPosition(cardX, py - cardHeight / 2.f);
+                cardBack.setFillColor(sf::Color(30, 30, 30, 200)); // Dark semi-transparent
+                cardBack.setOutlineColor(sf::Color(100, 100, 100, 100));
+                cardBack.setOutlineThickness(2.f);
+                
+                // Add blur effect pattern
+                sf::RectangleShape pattern(sf::Vector2f(cardWidth, cardHeight));
+                pattern.setPosition(cardX, py - cardHeight / 2.f);
+                pattern.setFillColor(sf::Color(50, 50, 50, 50));
+                
+                // Draw card back elements
+                window.draw(cardBack);
+                window.draw(pattern);
+                
+                // Add a "?" symbol to indicate hidden card
+                sf::Text hiddenSymbol;
+                hiddenSymbol.setFont(font);
+                hiddenSymbol.setString("?");
+                hiddenSymbol.setCharacterSize(32);
+                hiddenSymbol.setFillColor(sf::Color(150, 150, 150, 150));
+                
+                // Center the "?" on the card
+                sf::FloatRect symbolBounds = hiddenSymbol.getLocalBounds();
+                hiddenSymbol.setOrigin(symbolBounds.width / 2.f, symbolBounds.height / 2.f);
+                hiddenSymbol.setPosition(cardX + cardWidth / 2.f, py);
+                
+                window.draw(hiddenSymbol);
+            }
         }
 
-        // Draw wildcards if any
-        if (p.hasWildcards())
+        // Draw wildcards if any (only for active player)
+        if (p.hasWildcards() && (int)i == currentPlayerIndex)
         {
             sf::Text wcText;
             wcText.setFont(font);
             wcText.setCharacterSize(18);
-            wcText.setFillColor(sf::Color(255, 215, 0)); // Gold color for wildcards
+            wcText.setFillColor(sf::Color(255, 215, 0));
 
             std::string wcString = "WC: ";
             for (const auto &w : p.getWildcards())
