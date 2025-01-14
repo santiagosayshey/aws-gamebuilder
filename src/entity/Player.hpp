@@ -27,7 +27,7 @@ public:
 
     void setCurrentBet(float newBet); // For wildcards that alter bet
 
-    const std::string& getName() const;
+    const std::string &getName() const;
     bool isBusted() const;
 
     // Wildcard management
@@ -36,6 +36,9 @@ public:
     const std::vector<std::shared_ptr<Wildcard>> &getWildcards() const;
     bool hasWildcards() const;
     void clearWildcards();
+    bool hasForesight();
+    void setForesight();
+    void setForesightFalse();
 
 private:
     std::string name;
@@ -43,4 +46,5 @@ private:
     std::vector<std::shared_ptr<Wildcard>> wildcards;
     float money;
     float currentBet;
+    bool foresight = false;
 };

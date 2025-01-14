@@ -5,7 +5,7 @@
 
 void Foresight::use(Player &owner, std::vector<Player> &)
 {
-    // peek at the next card in the deck
+    owner.setForesight();
 }
 
 std::string Foresight::getName() const
@@ -15,7 +15,7 @@ std::string Foresight::getName() const
 
 std::string Foresight::getDescription() const
 {
-    return "Allows you to see the next card in the deck.";
+    return "Allows you to see the next card in the deck when pressing hit.";
 }
 
 Wildcard::Timing Foresight::getUsageTiming() const

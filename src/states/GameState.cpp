@@ -192,12 +192,38 @@ void GameState::handleInput()
 
                     if (hitButton.isMouseOver(mousePos))
                     {
-                        Card c = deck.draw();
-                        current.addCard(std::make_shared<Card>(c));
-                        if (current.isBusted())
+                        if (current.hasForesight() == true)
                         {
-                            messageText.setString(current.getName() + " BUSTED!");
+                            Card c = deck.peek();
+                            int val = c.getValue();
+                            std::string val_str;
+                            if (val == 1)
+                            { // Ace
+                                val_str = "Ace";
+                            }
+                            else if (val > 10 && val < 14)
+                            { // Face cards
+                                val = 10;
+                                val_str = std::to_string(val);
+                            }
+                            else
+                            {
+                                val_str = std::to_string(val);
+                            };
+                            messageText.setString("Next card is " + val_str + ". Click hit or double down to confirm the hit");
+                            current.setForesightFalse();
                         }
+
+                        else
+                        {
+                            Card c = deck.draw();
+                            current.addCard(std::make_shared<Card>(c));
+                            if (current.isBusted())
+                            {
+                                messageText.setString(current.getName() + " BUSTED!");
+                            }
+                        }
+
                         updateLabels();
                     }
                     else if (standButton.isMouseOver(mousePos))

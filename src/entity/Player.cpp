@@ -162,3 +162,26 @@ void Player::setTotal()
     hand.push_back(card1);
     hand.push_back(card2);
 }
+
+bool Player::hasForesight()
+{
+    if (foresight == true)
+    {
+        return true;
+    }
+
+    else
+    {
+        return false;
+    }
+}
+
+void Player::setForesight()
+{
+    foresight = true;
+}
+
+void Player::setForesightFalse()
+{
+    foresight = false;
+}
