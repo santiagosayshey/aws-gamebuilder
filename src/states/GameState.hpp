@@ -37,6 +37,7 @@ private:
     bool roundInProgress;
     bool roundConcluded;
     bool waitingForReplay;
+    bool isWildcardHovered;
 
     // Game systems
     Deck deck;
@@ -54,6 +55,7 @@ private:
     sf::Text wildcardInfoText;
     sf::Text messageText;
     sf::Text playerMoneyText; 
+    sf::Text wildcardHoverText;
 
     // Utility variables
     float animationTime = 0.0f;

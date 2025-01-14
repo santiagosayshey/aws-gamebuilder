@@ -336,7 +336,6 @@ void GameState::handleInput()
     }
 }
 
-
 void GameState::nextPlayer()
 {
     currentPlayerIndex++;
@@ -421,11 +420,8 @@ void GameState::updateLabels()
         {
             if (current.hasWildcards())
             {
-                std::string wText = "Wildcards: ";
-                for (const auto &w : current.getWildcards())
-                {
-                    wText += "[" + w->getName() + "] ";
-                }
+                const auto& wildcard = current.getWildcards()[0];
+                std::string wText = "Wildcard [" + wildcard->getName() + "]: " + wildcard->getDescription();
                 wildcardInfoText.setString(wText);
             }
             else
@@ -622,10 +618,7 @@ void GameState::render() {
             wcText.setFillColor(sf::Color(255, 215, 0));
 
             std::string wcString = "WC: ";
-            for (const auto &w : p.getWildcards())
-            {
-                wcString += w->getName() + " ";
-            }
+            wcString += p.getWildcards()[0]->getName();
 
             wcText.setString(wcString);
             bounds = wcText.getLocalBounds();
