@@ -312,7 +312,7 @@ void GameSettingsState::handleInput() {
                 // MINIMAL LOG: EXACTLY WHEN THE BUTTON IS PRESSED
                 std::cout << "[GameSettingsState] START GAME button clicked\n";
 
-                requestStateChange(StateChange::Game);
+                requestStateChange(StateChange::Betting);
 
                 // Another small log, after requesting:
                 std::cout << "[GameSettingsState] requestStateChange(Game) done\n";

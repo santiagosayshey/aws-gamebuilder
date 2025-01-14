@@ -3,9 +3,10 @@
 #include "states/GameState.hpp"
 #include "states/GameSettingsState.hpp"
 #include "states/HelpState.hpp"
+#include "states/BettingState.hpp"
 #include <iostream>
 
-Game::Game() 
+Game::Game()
     : window(sf::VideoMode(1920, 1080), "Blazing Aces") {
     window.setFramerateLimit(60);
     currentState = std::make_unique<MenuState>(window);
@@ -17,7 +18,7 @@ void Game::run() {
             std::cerr << "Invalid state!" << std::endl;
             break;
         }
-
+        
         currentState->handleInput();
         currentState->update();
         currentState->render();
@@ -36,9 +37,16 @@ void Game::run() {
                         std::cout << "Changing to Settings state" << std::endl;
                         changeState(std::make_unique<GameSettingsState>(window));
                         break;
+                    case StateChange::Betting: {
+                        std::cout << "Changing to Betting state" << std::endl;
+                        const GameSettings& settings = 
+                            dynamic_cast<GameSettingsState*>(currentState.get())->getSettings();
+                        changeState(std::make_unique<BettingState>(window, settings));
+                        break;
+                    }
                     case StateChange::Game: {
                         std::cout << "Changing to Game state" << std::endl;
-                        const GameSettings& settings = 
+                        const GameSettings& settings =
                             dynamic_cast<GameSettingsState*>(currentState.get())->getSettings();
                         changeState(std::make_unique<GameState>(window, settings));
                         break;
@@ -53,7 +61,7 @@ void Game::run() {
                         break;
                     case StateChange::None:
                     default:
-                        break;  // No state change needed
+                        break; // No state change needed
                 }
             } catch (const std::exception& e) {
                 std::cerr << "Error during state change: " << e.what() << std::endl;

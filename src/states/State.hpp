@@ -7,7 +7,8 @@ enum class StateChange {
     Settings,
     Help,
     Game,
-    Pause
+    Pause,
+    Betting
 };
 
 class State {
